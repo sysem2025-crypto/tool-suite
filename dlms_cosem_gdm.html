@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DLMS/COSEM GdM — Verifica diagnostica UNI/TS 11291-14-2</title>
+<style>
+:root {
+  --bg: #ffffff;
+  --bg2: #f7f6f2;
+  --bg3: #f0efe9;
+  --border: rgba(0,0,0,0.12);
+  --border2: rgba(0,0,0,0.22);
+  --text: #1a1a18;
+  --text2: #5a5a56;
+  --text3: #8a8a84;
+  --mono: 'Courier New', monospace;
+  --sans: system-ui, -apple-system, sans-serif;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --green: #3B6D11; --green-bg: #EAF3DE;
+  --red: #A32D2D; --red-bg: #FCEBEB;
+  --amber: #854F0B; --amber-bg: #FAEEDA;
+  --blue: #185FA5; --blue-bg: #E6F1FB;
+  --purple: #3C3489; --purple-bg: #EEEDFE;
+  --gray: #5F5E5A; --gray-bg: #F1EFE8;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1c1a; --bg2: #252522; --bg3: #2e2e2a;
+    --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.2);
+    --text: #f0ede8; --text2: #a0a09a; --text3: #686864;
+    --green: #9FE1CB; --green-bg: #085041;
+    --red: #F09595; --red-bg: #501313;
+    --amber: #FAC775; --amber-bg: #633806;
+    --blue: #85B7EB; --blue-bg: #042C53;
+    --purple: #AFA9EC; --purple-bg: #26215C;
+    --gray: #B4B2A9; --gray-bg: #444441;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);font-size:13px;color:var(--text);background:var(--bg);line-height:1.5}
+a{color:var(--blue)}
+
+/* ── layout ─────────────────────────────────── */
+.app{display:flex;flex-direction:column;min-height:100vh}
+.app-header{border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--bg)}
+.app-header h1{font-size:15px;font-weight:600;color:var(--text);flex:1}
+.app-header .sub{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.main-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg);padding:0 20px}
+.mtab{font-size:13px;padding:10px 18px;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--sans);white-space:nowrap}
+.mtab:hover{color:var(--text)}
+.mtab.active{color:var(--text);font-weight:600;border-bottom-color:var(--text)}
+.panel{display:none;padding:20px}
+.panel.active{display:block}
+
+/* ── common ─────────────────────────────────── */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px}
+.stat{background:var(--bg2);border-radius:var(--radius);padding:9px 12px}
+.sl{font-size:10px;color:var(--text3);margin-bottom:2px}
+.sv{font-size:18px;font-weight:600;color:var(--text)}
+.prog{height:3px;background:var(--bg3);border-radius:2px;margin-bottom:12px;overflow:hidden}
+.pf{height:100%;background:var(--green);border-radius:2px;transition:width .3s}
+.toolbar{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.toolbar input[type=text]{flex:1;min-width:160px;font-size:13px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:var(--sans)}
+.toolbar input[type=text]:focus{outline:none;border-color:var(--blue)}
+.fb{font-size:11px;padding:4px 10px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg);color:var(--text2);cursor:pointer;white-space:nowrap;font-family:var(--sans)}
+.fb:hover{background:var(--bg2)}
+.fb.on{background:var(--bg3);color:var(--text);font-weight:600;border-color:var(--border2)}
+.act-bar{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.abtn{font-size:12px;padding:6px 14px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg);color:var(--text);cursor:pointer;font-family:var(--sans)}
+.abtn:hover{background:var(--bg2)}
+select{font-size:12px;padding:3px 6px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg);color:var(--text);cursor:pointer;font-family:var(--sans)}
+select:focus{outline:none;border-color:var(--blue)}
+textarea{font-size:12px;padding:5px 8px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg);color:var(--text);resize:vertical;font-family:var(--sans);width:100%}
+textarea:focus{outline:none;border-color:var(--blue)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;font-size:10px;font-weight:600;color:var(--text3);padding:5px 7px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:6px 7px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.mono{font-family:var(--mono);font-size:11px}
+.pill{font-size:10px;padding:1px 6px;border-radius:var(--radius);white-space:nowrap;display:inline-block}
+.pill-green{background:var(--green-bg);color:var(--green)}
+.pill-red{background:var(--red-bg);color:var(--red)}
+.pill-amber{background:var(--amber-bg);color:var(--amber)}
+.pill-blue{background:var(--blue-bg);color:var(--blue)}
+.pill-purple{background:var(--purple-bg);color:var(--purple)}
+.pill-gray{background:var(--gray-bg);color:var(--gray)}
+.hidden{display:none!important}
+
+/* ══ PANEL 1: BIT DIAGNOSTICI ════════════════ */
+.bit-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:14px}
+.btab{font-size:12px;padding:6px 14px;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--sans)}
+.btab.active{color:var(--text);font-weight:600;border-bottom-color:var(--text)}
+.bpanel{display:none}.bpanel.active{display:block}
+.norm-row{background:var(--bg2)}
+.norm-row td{font-size:12px;color:var(--text2);line-height:1.5;padding:8px 12px 10px 36px}
+.note-tag{font-size:9px;padding:1px 5px;border-radius:var(--radius);background:var(--amber-bg);color:var(--amber);margin-left:5px;cursor:help}
+
+/* ══ PANEL 2: EVENTI ════════════════════════ */
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px;font-size:11px;color:var(--text2);align-items:center}
+.li{display:flex;align-items:center;gap:4px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.dot-g{background:var(--green)}
+.dot-b{background:var(--blue)}
+.dot-e{background:var(--bg3);border:1px solid var(--border2)}
+.flag-c{text-align:center;padding:6px 4px}
+
+/* ══ PANEL 3: TEST CASE ══════════════════════ */
+.tc-card{border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--bg);margin-bottom:8px;overflow:hidden}
+.tc-head{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;user-select:none}
+.tc-head:hover{background:var(--bg2)}
+.tc-id{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text3);min-width:42px}
+.tc-bit-b{font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:var(--radius);background:var(--bg2);color:var(--text2);min-width:32px;text-align:center;border:1px solid var(--border)}
+.tc-title{flex:1;font-size:13px;color:var(--text)}
+.tc-evts{font-size:11px;color:var(--text3);font-family:var(--mono);white-space:nowrap}
+.tc-badge{font-size:11px;padding:2px 8px;border-radius:var(--radius);font-weight:600;white-space:nowrap}
+.chev{font-size:11px;color:var(--text3);transition:transform .2s;min-width:14px;text-align:center}
+.chev.open{transform:rotate(90deg)}
+.tc-body{display:none;border-top:1px solid var(--border);padding:14px}
+.tc-body.open{display:block}
+.meta-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;color:var(--text2)}
+.meta-row b{color:var(--text);font-weight:600}
+.sub-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin:12px 0 6px}
+.crit-list{list-style:none;margin-bottom:12px}
+.crit-list li{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px}
+.crit-list li:last-child{border-bottom:none}
+.crit-cb{width:14px;height:14px;cursor:pointer;flex-shrink:0;margin-top:1px;accent-color:var(--green)}
+.crit-txt{color:var(--text);flex:1;line-height:1.4}
+.crit-txt.checked{color:var(--text3);text-decoration:line-through}
+.cprog{height:2px;background:var(--bg3);border-radius:2px;margin-top:3px;overflow:hidden}
+.cpf{height:100%;background:var(--green);border-radius:2px}
+.step-sub-row td{background:var(--bg2);font-size:11px;font-weight:600;color:var(--text2);padding:5px 7px}
+.step-res{color:var(--text2)}
+.step-res b{color:var(--text);font-family:var(--mono)}
+.tbl-wrap{overflow-x:auto;margin-bottom:12px}
+
+@media print {
+  .act-bar,.toolbar,.main-tabs,.bit-tabs,.app-header .abtn{display:none}
+  .panel{display:block!important;padding:12px}
+  .bpanel{display:block!important}
+  .tc-body{display:block!important}
+}
+@media(max-width:600px){
+  .stats{grid-template-columns:repeat(3,1fr)}
+  .tc-evts{display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="app-header">
+  <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+    <h1>DLMS/COSEM — Verifica diagnostica GdM</h1>
+    <span class="sub">UNI/TS 11291-14-2 · Appendice D · § 5.4.9.2</span>
+  </div>
+  <div id="stato-box" style="font-size:11px;color:var(--text2);background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:5px 10px;line-height:1.6;white-space:nowrap">
+    <div><span style="color:var(--text3)">Ultimo salvataggio locale:</span> <span id="ind-local">—</span></div>
+    <div><span style="color:var(--text3)">Ultimo JSON importato:</span> <span id="ind-json">—</span></div>
+    <div><span style="color:var(--text3)">Stato remoto (stato.json):</span> <span id="ind-remote">verifica…</span></div>
+  </div>
+  <span id="save-ind" style="font-size:11px;color:var(--text3);transition:opacity .5s;opacity:0.4;white-space:nowrap"></span>
+  <button class="abtn" onclick="exportJSON()">Esporta JSON</button>
+  <button class="abtn" onclick="document.getElementById('imp-inp').click()">Importa JSON</button>
+  <input type="file" id="imp-inp" accept=".json" style="display:none" onchange="importJSON(this)">
+  <button class="abtn" onclick="window.print()">Stampa</button>
+  <button class="abtn" onclick="clearAllData()" style="color:var(--red)">Reset dati</button>
+</div>
+
+<div class="main-tabs">
+  <button class="mtab active" onclick="switchMain('bit',this)">Bit diagnostici (B0–B31)</button>
+  <button class="mtab" onclick="switchMain('evt',this)">Codici evento (App. D)</button>
+  <button class="mtab" onclick="switchMain('tc',this)">Test case (TC-01–TC-32)</button>
+</div>
+
+<!-- ══════════ PANEL 1: BIT DIAGNOSTICI ══════════ -->
+<div class="panel active" id="p-bit">
+  <div class="bit-tabs">
+    <button class="btab active" onclick="switchBit('compl',this)">Diagnostica completa (B0–B31)</button>
+    <button class="btab" onclick="switchBit('sint',this)">Diagnostica sintetica oraria (B0–B7)</button>
+  </div>
+
+  <div class="bpanel active" id="bp-compl">
+    <div class="stats">
+      <div class="stat"><div class="sl">Verificati</div><div class="sv" id="bc-done">0/32</div></div>
+      <div class="stat"><div class="sl" style="color:var(--green)">OK</div><div class="sv" style="color:var(--green)" id="bc-ok">0</div></div>
+      <div class="stat"><div class="sl" style="color:var(--red)">KO</div><div class="sv" style="color:var(--red)" id="bc-ko">0</div></div>
+      <div class="stat"><div class="sl">N/A</div><div class="sv" id="bc-na">0</div></div>
+      <div class="stat"><div class="sl">Riservati</div><div class="sv" id="bc-res">9</div></div>
+    </div>
+    <div class="prog"><div class="pf" id="bc-prog" style="width:0%"></div></div>
+    <div class="toolbar">
+      <input type="text" id="bc-srch" placeholder="Cerca bit o descrizione…" oninput="renderBC()">
+      <select onchange="renderBC()" id="bc-flt">
+        <option value="">Tutti</option>
+        <option value="todo">Da verificare</option>
+        <option value="ko">Solo KO</option>
+        <option value="res">Riservati</option>
+      </select>
+    </div>
+    <div style="overflow-x:auto">
+    <table id="bc-tbl">
+      <thead><tr>
+        <th style="width:48px">Bit</th>
+        <th>Descrizione / Categoria</th>
+        <th style="width:110px">Ev. attivazione</th>
+        <th style="width:110px">Ev. ripristino</th>
+        <th style="width:100px">Stato</th>
+        <th style="width:130px">Note</th>
+      </tr></thead>
+      <tbody id="bc-tbody"></tbody>
+    </table>
+    </div>
+    <div class="act-bar">
+      <button class="abtn" onclick="exportBit()">Copia riepilogo</button>
+      <button class="abtn" onclick="resetBit()">Azzera</button>
+    </div>
+  </div>
+
+  <div class="bpanel" id="bp-sint">
+    <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Registro di diagnostica oraria (§ 5.4.9.2.2). Azzerato automaticamente a fine ora (eccetto B4, B5, B7). I bit B4 e B5 sono i 2 LSB della Tariffa Attiva Corrente.</p>
+    <div class="stats">
+      <div class="stat"><div class="sl">Verificati</div><div class="sv" id="bs-done">0/8</div></div>
+      <div class="stat"><div class="sl" style="color:var(--green)">OK</div><div class="sv" style="color:var(--green)" id="bs-ok">0</div></div>
+      <div class="stat"><div class="sl" style="color:var(--red)">KO</div><div class="sv" style="color:var(--red)" id="bs-ko">0</div></div>
+      <div class="stat"><div class="sl">N/A</div><div class="sv" id="bs-na">0</div></div>
+    </div>
+    <div class="prog"><div class="pf" id="bs-prog" style="width:0%"></div></div>
+    <div style="overflow-x:auto">
+    <table>
+      <thead><tr>
+        <th style="width:48px">Bit</th>
+        <th>Descrizione / Mappatura</th>
+        <th style="width:140px">Ev. attivazione</th>
+        <th style="width:120px">Ev. ripristino</th>
+        <th style="width:100px">Stato</th>
+        <th style="width:130px">Note</th>
+      </tr></thead>
+      <tbody id="bs-tbody"></tbody>
+    </table>
+    </div>
+    <div class="act-bar">
+      <button class="abtn" onclick="resetBitSint()">Azzera</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ PANEL 2: EVENTI ══════════ -->
+<div class="panel" id="p-evt">
+  <div class="legend">
+    <b style="color:var(--text)">Flag:</b>
+    <div class="li"><span class="dot dot-g"></span> Registrato</div>
+    <div class="li"><span class="pill pill-green" style="font-size:9px">LM</span> Logbook metrologico</div>
+    <div class="li"><span class="pill pill-purple" style="font-size:9px">OS</span> Oggetti supervisionati</div>
+    <div class="li"><span class="dot dot-b"></span> Solo classe B2</div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="sl">Totale</div><div class="sv" id="ev-tot">0</div></div>
+    <div class="stat"><div class="sl">Verificati</div><div class="sv" id="ev-done">0</div></div>
+    <div class="stat"><div class="sl" style="color:var(--green)">OK</div><div class="sv" style="color:var(--green)" id="ev-ok">0</div></div>
+    <div class="stat"><div class="sl" style="color:var(--red)">KO</div><div class="sv" style="color:var(--red)" id="ev-ko">0</div></div>
+    <div class="stat"><div class="sl">N/A</div><div class="sv" id="ev-na">0</div></div>
+  </div>
+  <div class="prog"><div class="pf" id="ev-prog" style="width:0%"></div></div>
+  <div class="toolbar">
+    <input type="text" id="ev-srch" placeholder="Cerca codice o descrizione…" oninput="renderEvt()">
+    <select id="ev-cat" onchange="renderEvt()"><option value="">Tutte le categorie</option></select>
+    <select id="ev-flt" onchange="renderEvt()">
+      <option value="">Tutti</option>
+      <option value="reg">Solo Registrato</option>
+      <option value="lm">Solo Logbook</option>
+      <option value="b2">Solo B2</option>
+      <option value="ko">Solo KO</option>
+      <option value="todo">Da verificare</option>
+      <option value="res">Riservati</option>
+    </select>
+  </div>
+  <div style="overflow-x:auto">
+  <table id="ev-tbl">
+    <thead><tr>
+      <th style="width:48px">Codice</th>
+      <th>Descrizione</th>
+      <th style="width:28px;text-align:center" title="Registrato">●</th>
+      <th style="width:36px;text-align:center">LM</th>
+      <th style="width:36px;text-align:center">OS</th>
+      <th style="width:28px;text-align:center" title="Solo B2">B2</th>
+      <th style="width:100px">Stato</th>
+      <th style="width:130px">Note</th>
+    </tr></thead>
+    <tbody id="ev-tbody"></tbody>
+  </table>
+  </div>
+  <div class="act-bar">
+    <button class="abtn" onclick="exportEvt()">Copia riepilogo</button>
+    <button class="abtn" onclick="resetEvt()">Azzera</button>
+  </div>
+</div>
+
+<!-- ══════════ PANEL 3: TEST CASE ══════════ -->
+<div class="panel" id="p-tc">
+  <div class="stats">
+    <div class="stat"><div class="sl">Totale TC</div><div class="sv" id="tc-tot">32</div></div>
+    <div class="stat"><div class="sl" style="color:var(--green)">Passati</div><div class="sv" style="color:var(--green)" id="tc-pass">0</div></div>
+    <div class="stat"><div class="sl" style="color:var(--red)">Falliti</div><div class="sv" style="color:var(--red)" id="tc-fail">0</div></div>
+    <div class="stat"><div class="sl" style="color:var(--amber)">Parziali</div><div class="sv" style="color:var(--amber)" id="tc-par">0</div></div>
+    <div class="stat"><div class="sl">Da eseguire</div><div class="sv" id="tc-todo">32</div></div>
+  </div>
+  <div class="prog"><div class="pf" id="tc-prog" style="width:0%"></div></div>
+  <div class="toolbar">
+    <input type="text" id="tc-srch" placeholder="Cerca TC, bit o descrizione…" oninput="renderTC()">
+    <select id="tc-flt" onchange="renderTC()">
+      <option value="">Tutti</option>
+      <option value="todo">Da eseguire</option>
+      <option value="pass">Passati</option>
+      <option value="partial">Parziali</option>
+      <option value="res">Riservati</option>
+    </select>
+  </div>
+  <div id="tc-list"></div>
+  <div class="act-bar">
+    <button class="abtn" onclick="exportTC()">Copia riepilogo</button>
+    <button class="abtn" onclick="expandAllTC(true)">Espandi tutti</button>
+    <button class="abtn" onclick="expandAllTC(false)">Comprimi tutti</button>
+    <button class="abtn" onclick="resetTC()">Azzera</button>
+  </div>
+</div>
+
+<!-- banner notifica stato remoto -->
+<div id="remote-banner" style="display:none;position:fixed;bottom:20px;right:20px;z-index:999;
+  background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-lg);
+  padding:14px 16px;max-width:360px;box-shadow:0 4px 24px rgba(0,0,0,0.18);font-size:13px">
+  <div style="font-weight:500;color:var(--text);margin-bottom:4px" id="rb-title">Stato remoto disponibile</div>
+  <div style="color:var(--text2);font-size:12px;margin-bottom:12px" id="rb-desc"></div>
+  <div style="display:flex;gap:8px">
+    <button class="abtn" style="flex:1;background:var(--color-background-info,#E6F1FB);color:var(--blue,#185FA5);border-color:var(--blue,#185FA5)" onclick="applyRemote()">Carica stato remoto</button>
+    <button class="abtn" onclick="document.getElementById('remote-banner').style.display='none'">Ignora</button>
+  </div>
+</div>
+
+<script>
+// ════════════════ DATA ════════════════
+const BC_DATA=[
+  {id:"B0",desc:"Sincronizzazione orologio fallita",cat:"Orologio",cl:"b12",act:"10",rst:"11, 12",reserved:false,norm:"Il bit B0 deve essere impostato quando un comando di sincronizzazione andrebbe oltre i limiti consentiti dallo stato operativo. Rimane attivo fino a una nuova sincronizzazione valida."},
+  {id:"B1",desc:"Registro eventi metrologici completo",cat:"Registro",cl:"b12",act:"26",rst:"2",reserved:false},
+  {id:"B2",desc:"Registro eventi metrologici ≥ 90%",cat:"Registro",cl:"b12",act:"27",rst:"2",reserved:false},
+  {id:"B3",desc:"Algoritmo di misura in errore",cat:"Misura",cl:"b12",act:"20",rst:"21",reserved:false,norm:"Per la classe B1 il bit B3 tiene conto anche del superamento del valore limite di portata (≥ Qmax). L'attivazione di B16, B17, B18 o B19 deve attivare anche B3. I volumi rilevati con B3 attivo vanno conteggiati come 'volumi in allarme'."},
+  {id:"B4",desc:"Errore generale apparato",cat:"Sistema",cl:"b12",act:"22 / 84 / 85",rst:"23",reserved:false,norm:"Situazione grave: il GdM non può proseguire in una o più attività normali. Se attivato dall'evento 84 (guasto modulo di comunicazione remota), viene ripristinato da una successiva comunicazione con esito positivo.",subs:[{d:"Guasto modulo comunicazione remota",a:"84",r:"—"},{d:"Grave errore software",a:"85",r:"—"}]},
+  {id:"B5",desc:"Errore portata",cat:"Portata",cl:"b12",act:"40 / 42",rst:"41 / 43",reserved:false,norm:"B1: overflow quando 'Portata convenzionale convertita' ≥ 95% Qmax. B2: overflow quando 'Portata convenzionale alle condizioni di misura' ≥ 95% Qmax. Attivato anche in caso di flusso inverso (se gestito dal GdM).",subs:[{d:"Rilevato overflow",a:"40",r:"41"},{d:"Rilevato flusso inverso",a:"42",r:"43"}]},
+  {id:"B6",desc:"Errore di memoria",cat:"Sistema",cl:"b12",act:"66",rst:"—",reserved:false,norm:"Indica un generico errore di memoria, ad esempio CRC non corretto durante la lettura di un blocco di memoria volatile o non volatile."},
+  {id:"B7",desc:"UNI/TS Device Status",cat:"Sistema",cl:"b12",act:"—",rst:"—",reserved:false,norm:"Copia del bit meno significativo del registro UNI/TS Device Status."},
+  {id:"B8",desc:"Livello batteria minore del 10%",cat:"Batteria",cl:"b12",act:"74",rst:"75",reserved:false,norm:"OR dello stato di tutte le batterie del GdM."},
+  {id:"B9",desc:"Livello batteria critico",cat:"Batteria",cl:"b12",act:"94",rst:"95",reserved:false,norm:"Indica che è stato raggiunto il punto critico della batteria che sostiene le funzionalità di misura (UNI/TS 11291-10:2013 § 6.4.1)."},
+  {id:"B10",desc:"Rilevata manomissione (tamper)",cat:"Sicurezza",cl:"b12",act:"80 / 116",rst:"81 / 117",reserved:false,subs:[{d:"Applicazione esterna campo interferente",a:"116",r:"117"}]},
+  {id:"B11",desc:"Ora legale attiva",cat:"Orologio",cl:"b12",act:"86",rst:"87",reserved:false},
+  {id:"B12",desc:"Riservato",cat:"Riservato",cl:"",act:"—",rst:"—",reserved:true},
+  {id:"B13",desc:"Sync (sincronizzazione in corso)",cat:"Orologio",cl:"b12",act:"vedi desc.",rst:"—",reserved:false,norm:"Deve essere attivato a seguito di un comando di sincronizzazione e rimanere attivo finché il processo non si è concluso. Caso particolare: se la sincronizzazione determinerebbe un cambio giorno, essa viene posticipata al primo istante utile e B13 rimane attivo."},
+  {id:"B14",desc:"Riservato",cat:"Riservato",cl:"",act:"—",rst:"—",reserved:true},
+  {id:"B15",desc:"Riservato",cat:"Riservato",cl:"",act:"—",rst:"—",reserved:true},
+  {id:"B16",desc:"Errore T: guasto o fuori valori fisici accettati",cat:"Temperatura",cl:"b2",act:"58, 60, 62",rst:"59, 61, 63",reserved:false,norm:"Errore sul sensore di temperatura. L'attivazione di B16 deve attivare anche B3."},
+  {id:"B17",desc:"Errore P: guasto o fuori valori fisici accettati",cat:"Pressione",cl:"b2",act:"48, 50, 52",rst:"49, 51, 53",reserved:false,norm:"Errore sul sensore di pressione. L'attivazione di B17 deve attivare anche B3."},
+  {id:"B18",desc:"Errore Z: fattore di compressibilità fuori intervallo",cat:"Misura",cl:"b2",act:"32",rst:"33",reserved:false,norm:"L'attivazione di B18 deve attivare anche B3."},
+  {id:"B19",desc:"Calcolo C in errore",cat:"Misura",cl:"b2",act:"—",rst:"—",reserved:false,norm:"L'attivazione di B19 deve attivare anche B3."},
+  {id:"B20",desc:"Mancanza alimentazione esterna > 30 min",cat:"Batteria",cl:"b12",act:"76",rst:"77",reserved:false},
+  {id:"B21",desc:"Registrazione periodica non usabile",cat:"Registro",cl:"b12",act:"—",rst:"—",reserved:false,norm:"Presente se: registrazione non effettuata, nessun campione valido per tutto il periodo, memorizzazione non attendibile. Azzerato automaticamente al termine del periodo."},
+  {id:"B22",desc:"Registrazione periodica incompleta",cat:"Registro",cl:"b12",act:"—",rst:"—",reserved:false,norm:"Presente se: la registrazione ha avuto durata diversa dal nominale, oppure durante il periodo sono stati rilevati campioni non validi. Azzerato automaticamente al termine del periodo."},
+  {id:"B23",desc:"Riservato",cat:"Riservato",cl:"",act:"—",rst:"—",reserved:true},
+  {id:"B24",desc:"Riservato",cat:"Riservato",cl:"",act:"—",rst:"—",reserved:true},
+  {id:"B25",desc:"Portata gas sopra soglia Qmax: Inizio",cat:"Portata",cl:"b12",act:"38",rst:"39",reserved:false},
+  {id:"B26",desc:"Riservato",cat:"Riservato",cl:"",act:"—",rst:"—",reserved:true},
+  {id:"B27",desc:"Guasto dispositivo misuratore primario: Inizio",cat:"Misuratore",cl:"b2",act:"78",rst:"79",reserved:false},
+  {id:"B28",desc:"Disconnessione dispositivo misuratore primario: Inizio",cat:"Misuratore",cl:"b2",act:"4",rst:"5",reserved:false},
+  {id:"B29",desc:"Riservato",cat:"Riservato",cl:"",act:"—",rst:"—",reserved:true},
+  {id:"B30",desc:"Riservato",cat:"Riservato",cl:"",act:"—",rst:"—",reserved:true},
+  {id:"B31",desc:"Riservato",cat:"Riservato",cl:"",act:"—",rst:"—",reserved:true}
+];
+const BS_DATA=[
+  {id:"B0",desc:"Sincronizzazione orologio fallita",ref:"B0",act:"10",rst:"11, 12"},
+  {id:"B1",desc:"Ora legale attiva",ref:"B11",act:"86",rst:"87"},
+  {id:"B2",desc:"Sync (sincronizzazione in corso) + Registrazione periodica incompleta",ref:"B13 + B22",act:"vedi B13",rst:"—"},
+  {id:"B3",desc:"Algoritmo misura in errore + Errore T/P/Z/C",ref:"B3+B16+B17+B18+B19",act:"20 / 58,60,62 / 48,50,52 / 32",rst:"21 / 59,61,63 / 49,51,53 / 33"},
+  {id:"B4",desc:"Fascia tariffaria — least significant bit",ref:"Tariffa Attiva",act:"—",rst:"—"},
+  {id:"B5",desc:"Fascia tariffaria — most significant bit",ref:"Tariffa Attiva",act:"—",rst:"—"},
+  {id:"B6",desc:"Errore di memoria + Registrazione periodica non usabile",ref:"B6 + B21",act:"66",rst:"—"},
+  {id:"B7",desc:"UNI/TS Device Status",ref:"B7",act:"40",rst:"41"}
+];
+const catNames={SIS:"Sistema & Reset",MIS:"Misura & Algoritmo",PRE:"Pressione",TEM:"Temperatura",POR:"Portata",ALI:"Alimentazione & Batteria",SIC:"Sicurezza & Antifrode",FW:"Firmware & Software",ORL:"Orologio & Sync",CFG:"Configurazione",TAR:"Tariffario",TOT:"Totalizzatori",VAL:"Valvola",COM:"Comunicazione & Moduli",CHI:"Chiavi & Crittografia",FAT:"Fatturazione",PSH:"Push & Scheduler",INS:"Installatore & Manutentore",RIS:"Riservato"};
+const D2={40:"Registrare solo alla prima occorrenza nel giorno-gas",41:"Registrare solo alla prima occorrenza nel giorno-gas",52:"Solo se la tecnologia di misura lo prevede. Prima occorrenza nel giorno-gas.",53:"Solo se la tecnologia di misura lo prevede. Prima occorrenza nel giorno-gas.",62:"Solo se la tecnologia di misura lo prevede. Prima occorrenza nel giorno-gas.",63:"Solo se la tecnologia di misura lo prevede. Prima occorrenza nel giorno-gas.",80:"Registrare solo alla prima occorrenza nel giorno-gas",81:"Registrare solo alla prima occorrenza nel giorno-gas",116:"Prima occorrenza nel giorno-gas. Vedi UNI/TS 11291-1:2013 § 4.3.2",117:"Prima occorrenza nel giorno-gas. Vedi UNI/TS 11291-1:2013 § 4.3.2",124:"Registrare una sola volta anche in caso di permanenza dello stato",128:"Solo se la Master Key è gestita dal GdM",167:"Solo se la modifica dell'algoritmo di sincronizzazione è gestita dal GdM",169:"Solo se la modifica della temperatura di riferimento è gestita dal GdM",170:"Solo se la temperatura di rimpiazzo è gestita dal GdM",182:"Solo se la modifica della pressione di riferimento è gestita dal GdM",183:"Solo se la pressione di rimpiazzo è gestita dal GdM"};
+const EV_DATA=[[1,"Reset dispositivo","SIS",1,1,0,0],[2,"Reset registro eventi metrologici","SIS",1,1,0,0],[3,"Reset registro eventi","SIS",1,0,0,0],[4,"Disconnessione dispositivo misuratore primario: Inizio","COM",1,1,0,0],[5,"Disconnessione dispositivo misuratore primario: Fine","COM",1,1,0,0],[6,"Disconnessione di uno o più moduli fisici: Inizio","COM",0,0,0,0],[7,"Disconnessione di uno o più moduli fisici: Fine","COM",0,0,0,0],[8,"Attivazione nuovo piano tariffario","TAR",1,1,1,0],[9,"Programmazione nuovo piano tariffario","TAR",1,0,0,0],[10,"Sincronizzazione orologio fallita","ORL",1,1,0,0],[11,"Impostazione orologio nello stato non configurato","ORL",1,1,0,0],[12,"Sincronizzazione orologio","ORL",1,1,1,0],[13,"Sessione comunicazione locale: Inizio","COM",1,0,0,0],[14,"Sessione comunicazione locale: Fine","COM",1,0,0,0],[15,"Configurazione altro parametro metrologico","CFG",1,1,1,0],[16,"Configurazione parametro non metrologico","CFG",0,0,0,0],[17,"Configurazione peso degli impulsi","CFG",1,1,1,1],[18,"Fattore di compressibilità: cambio formula","CFG",1,1,1,1],[19,"Cambio rapporto Zb/Z fisso","CFG",1,1,1,1],[20,"Errore algoritmo di misura: Inizio","MIS",1,1,0,0],[21,"Errore algoritmo di misura: Fine","MIS",1,1,0,0],[22,"Errore generale dispositivo: Inizio","SIS",1,1,0,0],[23,"Errore generale dispositivo: Fine","SIS",1,1,0,0],[24,"Modifica del numero cifre del totalizzatore meccanico","TOT",1,1,1,1],[25,"Reset totalizzatore corrente volumi alle condizioni di misura in allarme","TOT",1,1,1,1],[26,"Logbook metrologico pieno","SIS",1,1,0,0],[27,"Logbook metrologico ≥ 90%","SIS",1,1,0,0],[28,"Reset totalizzatore corrente volumi convertiti","TOT",1,1,1,1],[29,"Reset totalizzatore corrente di energia","TOT",1,1,1,1],[30,"Valvola chiusa per comando remoto/locale","VAL",0,0,0,0],[31,"Valvola portata allo stato aperto","VAL",0,0,0,0],[32,"Fattore di compressibilità non calcolabile: Inizio","MIS",1,1,0,0],[33,"Fattore di compressibilità non calcolabile: Fine","MIS",1,1,0,0],[34,"Cambio temperatura di combustione per calcolo energia","CFG",1,1,1,1],[35,"Parametri qualità gas ISO 12213-3 (SGERG 88 / SGERG 88-modH2) (*)","CFG",1,1,1,1],[36,"Portata gas sotto soglia minima: Inizio","POR",0,0,0,0],[37,"Portata gas sotto soglia minima: Fine","POR",0,0,0,0],[38,"Portata gas sopra Qmax: Inizio","POR",1,0,0,0],[39,"Portata gas sopra Qmax: Fine","POR",1,0,0,0],[40,"Condizione di overflow: Inizio","POR",1,0,0,0],[41,"Condizione di overflow: Fine","POR",1,0,0,0],[42,"Flusso inverso gas: Inizio","POR",1,0,0,0],[43,"Flusso inverso gas: Fine","POR",1,0,0,0],[44,"Parametri qualità gas ISO 12213-2 (AGA 8-DC92) (*)","CFG",1,1,1,1],[45,"Riservato UNI/CIG","RIS",0,0,0,0],[46,"Riservato UNI/CIG","RIS",0,0,0,0],[47,"Riservato UNI/CIG","RIS",0,0,0,0],[48,"Pressione sopra valore massimo fisico accettato: Inizio","PRE",1,1,0,0],[49,"Pressione sopra valore massimo fisico accettato: Fine","PRE",1,1,0,0],[50,"Pressione sotto il valore minimo fisico accettato: Inizio","PRE",1,1,0,0],[51,"Pressione sotto il valore minimo fisico accettato: Fine","PRE",1,1,0,0],[52,"Pressione guasta: Inizio","PRE",1,1,0,0],[53,"Pressione guasta: Fine","PRE",1,1,0,0],[54,"Riservato UNI/CIG","RIS",0,0,0,0],[55,"Riservato UNI/CIG","RIS",0,0,0,0],[56,"Riservato UNI/CIG","RIS",0,0,0,0],[57,"Riservato UNI/CIG","RIS",0,0,0,0],[58,"Temperatura sopra valore massimo fisico accettato: Inizio","TEM",1,1,0,0],[59,"Temperatura sopra valore massimo fisico accettato: Fine","TEM",1,1,0,0],[60,"Temperatura sotto il valore minimo fisico accettato: Inizio","TEM",1,1,0,0],[61,"Temperatura sotto il valore minimo fisico accettato: Fine","TEM",1,1,0,0],[62,"Temperatura guasta: Inizio","TEM",1,1,0,0],[63,"Temperatura guasta: Fine","TEM",1,1,0,0],[64,"Guasto sistema analisi qualità gas: Inizio","MIS",0,0,0,0],[65,"Guasto sistema analisi qualità gas: Fine","MIS",0,0,0,0],[66,"Memoria guasta","SIS",1,1,0,0],[67,"Modificato stato UNI/TS del dispositivo","SIS",1,1,0,0],[68,"Riservato UNI/CIG","RIS",0,0,0,0],[69,"Riservato UNI/CIG","RIS",0,0,0,0],[70,"Alimentazione – Mancanza critica: Inizio","ALI",1,0,0,0],[71,"Alimentazione – Mancanza critica: Fine","ALI",1,0,0,0],[72,"Alimentazione – Mancanza alimentazione primaria: Inizio","ALI",1,0,0,0],[73,"Alimentazione – Mancanza alimentazione primaria: Fine","ALI",1,0,0,0],[74,"Alimentazione – Livello batteria < 10%: Inizio","ALI",1,1,0,0],[75,"Alimentazione – Livello batteria < 10%: Fine (batteria sostituita)","ALI",1,1,0,0],[76,"Alimentazione – Mancanza sorgente esterna > 30 min: Inizio","ALI",1,0,0,0],[77,"Alimentazione – Mancanza sorgente esterna > 30 min: Fine","ALI",1,0,0,0],[78,"Guasto dispositivo misuratore primario: Inizio","COM",1,1,0,0],[79,"Guasto dispositivo misuratore primario: Fine","COM",1,1,0,0],[80,"Frode – Rilevata manomissione: Inizio","SIC",1,1,0,0],[81,"Frode – Rilevata manomissione: Fine","SIC",1,1,0,0],[82,"Riservato UNI/CIG","RIS",0,0,0,0],[83,"Riservato UNI/CIG","RIS",0,0,0,0],[84,"Guasto di un modulo di comunicazione remota","COM",1,0,0,0],[85,"Software – Errore grave del software","FW",1,1,0,0],[86,"DST (ora legale): Inizio","ORL",1,0,0,0],[87,"DST (ora legale): Fine","ORL",1,0,0,0],[88,"Errore generale (operazione push): Inizio","PSH",0,0,0,0],[89,"Errore generale (operazione push): Fine","PSH",0,0,0,0],[90,"Chiusura periodo di fatturazione – periodico","FAT",0,0,0,0],[91,"Chiusura periodo di fatturazione – modifica piano tariffario","FAT",0,0,0,0],[92,"Chiusura periodo di fatturazione – richiesta sporadica locale","FAT",1,0,0,0],[93,"Chiusura periodo di fatturazione – richiesta sporadica remota","FAT",1,0,0,0],[94,"Batteria sotto il livello critico: Inizio","ALI",1,1,0,0],[95,"Batteria sotto il livello critico: Fine","ALI",1,0,0,0],[96,"Iniziato nuovo aggiornamento firmware","FW",1,0,0,0],[97,"Inizializzazione del processo di aggiornamento firmware","FW",1,1,0,0],[98,"Aggiornamento firmware: verifica OK","FW",1,0,0,0],[99,"Aggiornamento firmware: verifica fallita","FW",1,0,0,0],[100,"Aggiornamento firmware: attivazione con successo","FW",1,1,1,0],[101,"Aggiornamento firmware: attivazione fallita","FW",1,1,1,0],[102,"Valvola chiusa a causa di perdite","VAL",0,0,0,0],[103,"Valvola chiusa perché la batteria è stata rimossa","VAL",0,0,0,0],[104,"Valvola chiusa perché carica residua batteria sotto livello critico","VAL",0,0,0,0],[105,"Valvola chiusa a causa di guasto del sistema di misurazione","VAL",0,0,0,0],[106,"Password valvola non valida","VAL",0,0,0,0],[107,"Valvola chiusa perché nessuna comunicazione per un tempo configurabile","VAL",0,0,0,0],[108,"Nuova password valvola programmata","VAL",0,0,0,0],[109,"Valvola in stato pronto per la connessione a causa di password valida","VAL",0,0,0,0],[110,"Valvola in stato pronto per la connessione a seguito di comando","VAL",0,0,0,0],[111,"Valvola: Inizio del periodo di validità del comando di apertura","VAL",0,0,0,0],[112,"Valvola: Fine del periodo di validità del comando di apertura","VAL",0,0,0,0],[113,"Valvola chiusa, ma sono presenti perdite","VAL",0,0,0,0],[114,"Valvola: non è possibile aprire o chiudere","VAL",0,0,0,0],[115,"Scrittura del totalizzatore assoluto corrente volumi alle condizioni di misura","TOT",1,1,1,1],[116,"Applicazione esterna campo interferente: Inizio","SIC",1,1,0,0],[117,"Applicazione esterna campo interferente: Scomparsa","SIC",1,1,0,0],[118,"Accesso a parte elettronica","SIC",0,0,0,0],[119,"Riservato UNI/CIG","RIS",0,0,0,0],[120,"Riservato UNI/CIG","RIS",0,0,0,0],[121,"Accesso non autorizzato","SIC",0,0,0,0],[122,"Riservato UNI/CIG","RIS",0,0,0,0],[123,"Riservato UNI/CIG","RIS",0,0,0,0],[124,"Rimozione non autorizzata della batteria","SIC",1,1,0,0],[125,"Database Reset","SIS",1,1,0,0],[126,"Database Reset dopo aggiornamento firmware","SIS",0,0,0,0],[127,"Database Corrotto","SIS",0,0,0,0],[128,"Aggiornata Master Key","CHI",1,1,0,0],[129,"Aggiornata chiave Management client (KEYC)","CHI",1,1,0,0],[130,"Aggiornata chiave Installer/maintenance client (KEYT)","CHI",1,1,0,0],[131,"Aggiornata chiave Guarantor authority client (KEYS)","CHI",1,1,0,0],[132,"Aggiornata chiave Gateway client (KEYN)","CHI",0,0,0,0],[133,"Aggiornata chiave Broadcasting client (KEYM)","CHI",1,1,0,0],[134,"PM1 Power Level: Incrementato","COM",0,0,0,0],[135,"PM1 Power Level: Diminuito","COM",0,0,0,0],[136,"PM1 Power Level: Raggiunto il massimo","COM",0,0,0,0],[137,"PM1 Power Level: Raggiunto il minimo","COM",0,0,0,0],[138,"PM1 Channel: Modificato","COM",0,0,0,0],[139,"PM1/PP4 Active mode: Inizio","COM",1,0,0,0],[140,"PM1/PP4 Active mode: Fine","COM",1,0,0,0],[141,"PM1/PP4 Orphan mode: Inizio","COM",1,0,0,0],[142,"PM1/PP4 Orphan mode: Fine","COM",1,0,0,0],[144,"PM1: PIB Aggiornato","COM",0,0,0,0],[145,"PM1: MIB Aggiornato","COM",0,0,0,0],[146,"PM1: Accesso sincrono modificato","COM",0,0,0,0],[147,"PM1: Periodo sincrono modificato","COM",0,0,0,0],[148,"PM1: Maintenance Window modificata","COM",0,0,0,0],[149,"PM1/PP4 Orphan mode: Soglia modificata","COM",1,0,0,0],[150,"PM1: Parametri di affiliazione modificati","COM",0,0,0,0],[151,"Indirizzo secondario Modulo RF modificato","COM",0,0,0,0],[152,"Valvola: Configurazione PGV modificata","VAL",0,0,0,0],[153,"Ora di inizio Giorno-Gas convenzionale aggiornata","CFG",1,1,1,0],[154,"Periodo di fatturazione aggiornato","FAT",1,1,1,0],[155,"Push Scheduler 1: modificato","PSH",1,0,0,0],[156,"Push Setup 1: modificato","PSH",1,0,0,0],[157,"Push Scheduler 2: modificato","PSH",1,0,0,0],[158,"Push Setup 2: modificato","PSH",1,0,0,0],[159,"Push Scheduler 3: modificato","PSH",1,0,0,0],[160,"Push Setup 3: modificato","PSH",1,0,0,0],[161,"Push Scheduler 4: modificato","PSH",1,0,0,0],[162,"Push Setup 4: modificato","PSH",1,0,0,0],[163,"Installatore/Manutentore: Utente modificato","INS",1,1,0,0],[164,"Installatore/Manutentore: Attivazione","INS",1,0,0,0],[165,"Soglie Frame Counter: Modificate","CHI",1,0,0,0],[166,"Parametri di funzionamento orologio modificati","ORL",1,1,1,0],[167,"Algoritmo di sincronizzazione modificato","ORL",1,1,1,0],[168,"Identificatore del punto di misura (PDR) modificato","CFG",1,0,0,0],[169,"Temperatura di riferimento modificata","TEM",1,1,1,0],[170,"Temperatura di rimpiazzo modificata","TEM",1,1,1,0],[171,"Connessione Remota: Inizio","COM",0,0,0,0],[172,"Connessione Remota: Fine","COM",0,0,0,0],[173,"Connessione Remota: Time-out","COM",0,0,0,0],[174,"Finestra di manutenzione: fallimento per guasto hardware","INS",0,0,0,0],[175,"Finestra di manutenzione: fallimento per guasto software","INS",0,0,0,0],[176,"Finestra di manutenzione: attivazione","INS",0,0,0,0],[177,"Finestra di manutenzione: terminazione","INS",0,0,0,0],[178,"Attivazione manuale della connessione remota","COM",1,0,0,0],[179,"Valvola chiusa per raggiunto massimo numero di tentativi di frode","VAL",0,0,0,0],[180,"Valvola chiusa per tempo eccessivo di sostituzione batteria","VAL",0,0,0,0],[181,"Associazione Installer/Maintainer disabilitata","INS",1,0,0,0],[182,"Pressione di riferimento modificata","PRE",1,1,1,0],[183,"Pressione di rimpiazzo modificata","PRE",1,1,1,0],[184,"Modifica di qualunque parametro dell'uscita impulsiva","CFG",1,0,0,0],[185,"Reset del tempo trascorso con portata convenzionale sopra il valore di soglia","POR",1,0,0,0],[186,"Attivazione sigillo","SIC",1,1,0,1],[187,"Disattivazione sigillo","SIC",1,1,0,1],[188,"Riservato UNI/CIG","RIS",0,0,0,0],[189,"Riservato UNI/CIG","RIS",0,0,0,0],[190,"Riservato UNI/CIG","RIS",0,0,0,0],[191,"Riservato UNI/CIG","RIS",0,0,0,0],[192,"Riservato UNI/CIG","RIS",0,0,0,0]];
+
+const TC_DATA=[
+  {id:"TC-01",bit:"B0",title:"Sincronizzazione orologio fallita",evtA:"10",evtR:"11, 12",cat:"orologio",reserved:false,objects:["Current Diagnostic (7-0:96.5.1.255)","UNIX Time (0-0:1.1.0.255)","Clock (0-0:1.0.0.255)"],steps:[{n:1,sub:null,a:"Assicurarsi che il GdM sia in stato NON CONFIGURATO",e:"Stato verificato"},{n:2,sub:null,a:"Inviare un comando di impostazione orologio con data non valida (es. 31/02/2025)",e:"Comando rifiutato"},{n:3,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B0 = 1"},{n:4,sub:null,a:"Verificare il Metrological Logbook",e:"Evento 10 presente"},{n:5,sub:null,a:"Inviare un comando di sincronizzazione valido",e:"Comando accettato"},{n:6,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B0 = 0"},{n:7,sub:null,a:"Verificare il Metrological Logbook",e:"Evento 12 presente"}],criteria:["Comando con data non valida viene rifiutato","Bit B0 = 1 dopo il tentativo fallito","Evento 10 registrato","Bit B0 = 0 dopo sincronizzazione valida","Evento 12 registrato"]},
+  {id:"TC-02",bit:"B1",title:"Registro eventi metrologici pieno",evtA:"26",evtR:"2",cat:"registro",reserved:false,objects:["Current Diagnostic (7-0:96.5.1.255)","Metrological Logbook (7-0:99.98.1.255)"],steps:[{n:1,sub:null,a:"Riempire il Metrological Logbook fino all'ultima posizione (profile_entries ≥ 500)",e:"Logbook quasi pieno"},{n:2,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B1 = 0 (non ancora pieno)"},{n:3,sub:null,a:"Generare un nuovo evento metrologico (es. modifica parametro)",e:"Evento generato"},{n:4,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B1 = 1"},{n:5,sub:null,a:"Verificare il Metrological Logbook",e:"Evento 26 presente come ultimo record"},{n:6,sub:null,a:"Tentare di modificare un parametro metrologico (es. Base Temperature)",e:"Comando rifiutato con exception response"},{n:7,sub:null,a:"Eseguire reset del Metrological Logbook (ACTION method 1)",e:"Reset eseguito"},{n:8,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B1 = 0"}],criteria:["Bit B1 = 0 quando logbook non è pieno","Bit B1 = 1 dopo l'ultimo evento che satura il logbook","Evento 26 registrato","Modifiche a parametri metrologici bloccate quando B1 = 1","Bit B1 = 0 dopo reset del logbook"]},
+  {id:"TC-03",bit:"B2",title:"Registro eventi metrologici ≥ 90%",evtA:"27",evtR:"2",cat:"registro",reserved:false,objects:["Current Diagnostic (7-0:96.5.1.255)","Metrological Logbook (7-0:99.98.1.255)"],steps:[{n:1,sub:null,a:"Riempire il Metrological Logbook fino al 90% della capacità (es. 450 su 500)",e:"Logbook al 90%"},{n:2,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B2 = 0"},{n:3,sub:null,a:"Generare un nuovo evento metrologico",e:"Evento generato"},{n:4,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B2 = 1"},{n:5,sub:null,a:"Verificare il Metrological Logbook",e:"Evento 27 presente"},{n:6,sub:null,a:"Eseguire reset del Metrological Logbook",e:"Reset eseguito"},{n:7,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B2 = 0"}],criteria:["Bit B2 = 0 al 90% esatto","Bit B2 = 1 dopo il primo evento oltre il 90%","Evento 27 registrato","Bit B2 = 0 dopo reset"]},
+  {id:"TC-04",bit:"B3",title:"Algoritmo di misura in errore",evtA:"20, +B16/17/18/19",evtR:"21",cat:"misura",reserved:false,objects:["Current Diagnostic (7-0:96.5.1.255)"],steps:[{n:null,sub:"Sottocaso 4.1 — Attivazione diretta",a:"",e:""},{n:1,sub:null,a:"Simulare un errore nell'algoritmo di misura",e:"Condizione di errore attivata"},{n:2,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B3 = 1"},{n:3,sub:null,a:"Verificare il Metrological Logbook",e:"Evento 20 presente"},{n:4,sub:null,a:"Risolvere la condizione di errore",e:"Errore risolto"},{n:5,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B3 = 0"},{n:6,sub:null,a:"Verificare il Metrological Logbook",e:"Evento 21 presente"},{n:null,sub:"Sottocaso 4.2 — Attivazione indiretta da B16",a:"",e:""},{n:7,sub:null,a:"Simulare un errore di temperatura fuori range",e:"Errore attivato"},{n:8,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B16 = 1, Bit B3 = 1"},{n:9,sub:null,a:"Risolvere l'errore di temperatura",e:"Errore risolto"},{n:10,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B16 = 0, Bit B3 = 0"}],criteria:["Evento 20 attiva B3","Evento 21 disattiva B3","Attivazione di B16/B17/B18/B19 attiva B3","Ripristino di B16/B17/B18/B19 disattiva B3 (se nessun altro errore attivo)"]},
+  {id:"TC-05",bit:"B4",title:"Errore generale apparato",evtA:"22, 84",evtR:"23",cat:"sistema",reserved:false,objects:["Current Diagnostic (7-0:96.5.1.255)"],steps:[{n:null,sub:"Sottocaso 5.1 — Errore generico",a:"",e:""},{n:1,sub:null,a:"Simulare un errore hardware generico",e:"Errore attivato"},{n:2,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B4 = 1"},{n:3,sub:null,a:"Verificare il logbook",e:"Evento 22 presente"},{n:4,sub:null,a:"Ripristinare la condizione di errore",e:"Errore risolto"},{n:5,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B4 = 0"},{n:6,sub:null,a:"Verificare il logbook",e:"Evento 23 presente"},{n:null,sub:"Sottocaso 5.2 — Guasto modulo comunicazione",a:"",e:""},{n:7,sub:null,a:"Simulare il guasto del modem di comunicazione remota",e:"Guasto attivato"},{n:8,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B4 = 1"},{n:9,sub:null,a:"Verificare il logbook",e:"Evento 84 presente"},{n:10,sub:null,a:"Ripristinare il modulo e stabilire comunicazione con esito positivo",e:"Ripristinato"},{n:11,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B4 = 0"}],criteria:["Evento 22 attiva B4","Evento 84 attiva B4","Evento 23 disattiva B4","Ripristino dopo evento 84 richiede comunicazione con esito positivo"]},
+  {id:"TC-06",bit:"B5",title:"Errore portata (overflow / flusso inverso)",evtA:"40, 42",evtR:"41, 43",cat:"portata",reserved:false,objects:["Current Diagnostic (7-0:96.5.1.255)"],steps:[{n:null,sub:"Sottocaso 6.1 — Overflow",a:"",e:""},{n:1,sub:null,a:"Applicare portata > 95% Qmax (B1: portata convertita; B2: portata alle condizioni di misura)",e:"Portata superiore alla soglia"},{n:2,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B5 = 1"},{n:3,sub:null,a:"Verificare il logbook",e:"Evento 40 presente"},{n:4,sub:null,a:"Ridurre la portata al di sotto di Qmax",e:"Portata normale"},{n:5,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B5 = 0"},{n:6,sub:null,a:"Verificare il logbook",e:"Evento 41 presente"},{n:null,sub:"Sottocaso 6.2 — Flusso inverso",a:"",e:""},{n:7,sub:null,a:"Applicare una condizione di flusso inverso (se supportato)",e:"Flusso inverso attivato"},{n:8,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B5 = 1"},{n:9,sub:null,a:"Verificare il logbook",e:"Evento 42 presente"},{n:10,sub:null,a:"Rimuovere la condizione di flusso inverso",e:"Flusso normale"},{n:11,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B5 = 0"},{n:12,sub:null,a:"Verificare il logbook",e:"Evento 43 presente"},{n:null,sub:"Sottocaso 6.3 — Condizioni multiple (logica OR)",a:"",e:""},{n:13,sub:null,a:"Attivare sia overflow che flusso inverso",e:"Entrambe le condizioni attive"},{n:14,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B5 = 1"},{n:15,sub:null,a:"Cessare solo l'overflow",e:"Solo flusso inverso attivo"},{n:16,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B5 = 1 (rimane attivo)"},{n:17,sub:null,a:"Cessare anche il flusso inverso",e:"Nessuna condizione attiva"},{n:18,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B5 = 0"}],criteria:["Evento 40 attiva B5","Evento 41 disattiva B5 (se nessuna altra condizione attiva)","Evento 42 attiva B5","Evento 43 disattiva B5 (se nessuna altra condizione attiva)","Logica OR: B5 rimane attivo finché almeno una condizione persiste"]},
+  {id:"TC-07",bit:"B6",title:"Errore di memoria",evtA:"66",evtR:"N/A",cat:"sistema",reserved:false,objects:["Current Diagnostic (7-0:96.5.1.255)"],steps:[{n:1,sub:null,a:"Simulare un errore di lettura CRC su memoria non volatile",e:"Errore generato"},{n:2,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B6 = 1"},{n:3,sub:null,a:"Verificare il logbook",e:"Evento 66 presente"},{n:4,sub:null,a:"Eseguire un reset del dispositivo (se necessario per il ripristino)",e:"Reset eseguito"},{n:5,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B6 = 0 (se errore risolto)"}],criteria:["Evento 66 attiva B6","B6 rimane attivo finché l'errore persiste","B6 si disattiva dopo correzione dell'errore o reset"]},
+  {id:"TC-08",bit:"B7",title:"Copia stato UNI/TS",evtA:"Derivato",evtR:"Derivato",cat:"sistema",reserved:false,objects:["Current Diagnostic (7-0:96.5.1.255)","UNI/TS Device Status (10-0:96.5.0.255)"],steps:[{n:1,sub:null,a:"Leggere UNI/TS Device Status e Current Diagnostic",e:"Registrare i valori"},{n:2,sub:null,a:"Verificare la relazione",e:"B7 = (UNI/TS Device Status & 0x01)"},{n:3,sub:null,a:"Commutare il dispositivo in stato NON CONFIGURATO (0x03)",e:"Commutazione eseguita"},{n:4,sub:null,a:"Leggere i registri",e:"B7 = 1 (bit 0 = 1)"},{n:5,sub:null,a:"Commutare il dispositivo in stato NORMALE (0x00)",e:"Commutazione eseguita"},{n:6,sub:null,a:"Leggere i registri",e:"B7 = 0 (bit 0 = 0)"},{n:7,sub:null,a:"Commutare il dispositivo in stato MANUTENZIONE (0x01)",e:"Commutazione eseguita"},{n:8,sub:null,a:"Leggere i registri",e:"B7 = 1 (bit 0 = 1)"}],criteria:["B7 = (UNI/TS Device Status & 0x01) in ogni stato","B7 si aggiorna dinamicamente al cambio di stato"]},
+  {id:"TC-09",bit:"B8",title:"Livello batteria < 10%",evtA:"74",evtR:"75",cat:"batteria",reserved:false,objects:["Current Diagnostic (7-0:96.5.1.255)","Battery Use Time Counter (300-0:96.6.0.255)"],steps:[{n:1,sub:null,a:"Simulare un calo della tensione di batteria al di sotto del 10% della capacità nominale",e:"Condizione attivata"},{n:2,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B8 = 1"},{n:3,sub:null,a:"Verificare il logbook",e:"Evento 74 presente"},{n:4,sub:null,a:"Simulare la sostituzione della batteria o la ricarica",e:"Batteria ripristinata"},{n:5,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B8 = 0"},{n:6,sub:null,a:"Verificare il logbook",e:"Evento 75 presente"}],criteria:["Evento 74 attiva B8","Evento 75 disattiva B8"]},
+  {id:"TC-10",bit:"B9",title:"Livello batteria critico",evtA:"94",evtR:"95",cat:"batteria",reserved:false,objects:["Current Diagnostic (7-0:96.5.1.255)"],steps:[{n:1,sub:null,a:"Simulare un calo della tensione di batteria al livello critico (UNI/TS 11291-10:2013 § 6.4.1)",e:"Condizione attivata"},{n:2,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B9 = 1"},{n:3,sub:null,a:"Verificare il logbook",e:"Evento 94 presente"},{n:4,sub:null,a:"Simulare la sostituzione della batteria",e:"Batteria sostituita"},{n:5,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B9 = 0"},{n:6,sub:null,a:"Verificare il logbook",e:"Evento 95 presente"}],criteria:["Evento 94 attiva B9","Evento 95 disattiva B9"]},
+  {id:"TC-11",bit:"B10",title:"Rilevata manomissione / campo interferente",evtA:"80, 116",evtR:"81, 117",cat:"sicurezza",reserved:false,objects:["Current Diagnostic (7-0:96.5.1.255)","Anti-fraud totalizer (0-0:96.20.25.255)"],steps:[{n:null,sub:"Sottocaso 11.1 — Manomissione fisica",a:"",e:""},{n:1,sub:null,a:"Simulare l'apertura del coperchio del dispositivo",e:"Tamper attivato"},{n:2,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B10 = 1"},{n:3,sub:null,a:"Verificare il Metrological Logbook",e:"Evento 80 presente"},{n:4,sub:null,a:"Richiudere il coperchio",e:"Tamper disattivato"},{n:5,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B10 = 0"},{n:6,sub:null,a:"Verificare il logbook",e:"Evento 81 presente"},{n:null,sub:"Sottocaso 11.2 — Campo interferente",a:"",e:""},{n:7,sub:null,a:"Applicare un campo magnetico esterno al dispositivo",e:"Campo rilevato"},{n:8,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B10 = 1"},{n:9,sub:null,a:"Verificare il logbook",e:"Evento 116 presente"},{n:10,sub:null,a:"Rimuovere il campo magnetico",e:"Campo rimosso"},{n:11,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B10 = 0"},{n:12,sub:null,a:"Verificare il logbook",e:"Evento 117 presente"}],criteria:["Evento 80 attiva B10","Evento 81 disattiva B10","Evento 116 attiva B10","Evento 117 disattiva B10","Anti-fraud totalizer si incrementa solo per tentativi con impatto sulla metrologia"]},
+  {id:"TC-12",bit:"B11",title:"Ora legale attiva",evtA:"86",evtR:"87",cat:"orologio",reserved:false,objects:["Current Diagnostic (7-0:96.5.1.255)","Clock (0-0:1.0.0.255)"],steps:[{n:1,sub:null,a:"Configurare Clock con parametri di inizio ora legale (es. ultima domenica di marzo alle 02:00)",e:"Configurazione corretta"},{n:2,sub:null,a:"Impostare orologio GdM dopo il passaggio all'ora legale (es. 2025-03-30 03:00:00)",e:"Ora impostata"},{n:3,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B11 = 1"},{n:4,sub:null,a:"Verificare il logbook",e:"Evento 86 presente"},{n:5,sub:null,a:"Impostare orologio dopo il passaggio all'ora solare (es. 2025-10-26 04:00:00)",e:"Ora impostata"},{n:6,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B11 = 0"},{n:7,sub:null,a:"Verificare il logbook",e:"Evento 87 presente"}],criteria:["Evento 86 attiva B11","Evento 87 disattiva B11"]},
+  {id:"TC-13",bit:"B12",title:"Riservato — sempre 0",evtA:"N/A",evtR:"N/A",cat:"riservato",reserved:true,objects:["Current Diagnostic (7-0:96.5.1.255)"],steps:[{n:1,sub:null,a:"Leggere il Current Diagnostic in condizioni normali",e:"Bit B12 = 0"},{n:2,sub:null,a:"Eseguire operazioni che potrebbero influenzare bit adiacenti (es. attivare B11)",e:"B12 rimane 0"},{n:3,sub:null,a:"Tentare di scrivere il bit B12 (se possibile)",e:"Scrittura ignorata o rifiutata"},{n:4,sub:null,a:"Leggere nuovamente",e:"Bit B12 = 0"}],criteria:["Bit B12 è sempre 0 in ogni condizione operativa","Eventuali tentativi di scrittura non modificano il bit"]},
+  {id:"TC-14",bit:"B13",title:"Sincronizzazione in corso",evtA:"Comando sync ricevuto",evtR:"Fine processo",cat:"orologio",reserved:false,objects:["Current Diagnostic (7-0:96.5.1.255)","Synchronization Algorithm (0-0:94.39.44.255)","Clock (0-0:1.0.0.255)"],steps:[{n:1,sub:null,a:"Impostare l'algoritmo di sincronizzazione su 'differita' (valore 2, 3, 6 o 7)",e:"Algoritmo impostato"},{n:2,sub:null,a:"Inviare un comando di sincronizzazione con scostamento significativo (es. +300 secondi)",e:"Comando accettato"},{n:3,sub:null,a:"Leggere immediatamente il Current Diagnostic",e:"Bit B13 = 1"},{n:4,sub:null,a:"Attendere il completamento della sincronizzazione",e:"Processo in corso"},{n:5,sub:null,a:"Leggere il Current Diagnostic dopo il completamento",e:"Bit B13 = 0"},{n:null,sub:"Sottocaso 14.2 — Caso speciale (ritorno al giorno-gas precedente)",a:"",e:""},{n:6,sub:null,a:"Inviare un comando di sincronizzazione che causerebbe un ritorno al giorno-gas precedente",e:"Comando ricevuto"},{n:7,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B13 = 1"},{n:8,sub:null,a:"Verificare che il comando venga ritardato al primo istante utile",e:"Comando non eseguito immediatamente"},{n:9,sub:null,a:"Attendere il momento opportuno e verificare l'esecuzione",e:"Comando eseguito al momento corretto"}],criteria:["B13 = 1 all'inizio del processo di sincronizzazione","B13 = 0 al termine del processo","In caso di ritorno al giorno-gas precedente il comando è ritardato e B13 rimane attivo fino all'esecuzione"]},
+  {id:"TC-15",bit:"B14",title:"Riservato — sempre 0",evtA:"N/A",evtR:"N/A",cat:"riservato",reserved:true,objects:["Current Diagnostic (7-0:96.5.1.255)"],steps:[{n:1,sub:null,a:"Leggere il Current Diagnostic in condizioni normali",e:"Bit B14 = 0"},{n:2,sub:null,a:"Eseguire operazioni che potrebbero influenzare bit adiacenti",e:"B14 rimane 0"},{n:3,sub:null,a:"Tentare di scrivere il bit B14 (se possibile)",e:"Scrittura ignorata o rifiutata"},{n:4,sub:null,a:"Leggere nuovamente",e:"Bit B14 = 0"}],criteria:["Bit B14 è sempre 0 in ogni condizione operativa"]},
+  {id:"TC-16",bit:"B15",title:"Riservato — sempre 0",evtA:"N/A",evtR:"N/A",cat:"riservato",reserved:true,objects:["Current Diagnostic (7-0:96.5.1.255)"],steps:[{n:1,sub:null,a:"Leggere il Current Diagnostic in condizioni normali",e:"Bit B15 = 0"},{n:2,sub:null,a:"Eseguire operazioni che potrebbero influenzare bit adiacenti",e:"B15 rimane 0"},{n:3,sub:null,a:"Tentare di scrivere il bit B15 (se possibile)",e:"Scrittura ignorata o rifiutata"},{n:4,sub:null,a:"Leggere nuovamente",e:"Bit B15 = 0"}],criteria:["Bit B15 è sempre 0 in ogni condizione operativa"]},
+  {id:"TC-17",bit:"B16",title:"Errore temperatura (T > max / T < min / guasto)",evtA:"58, 60, 62",evtR:"59, 61, 63",cat:"temperatura",reserved:false,objects:["Current Diagnostic (7-0:96.5.1.255)","Current Temperature (7-0:41.0.0.255)"],steps:[{n:null,sub:"Sottocaso 17.1 — Temperatura sopra massimo",a:"",e:""},{n:1,sub:null,a:"Simulare una temperatura del gas superiore al massimo fisico accettato",e:"Condizione attivata"},{n:2,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B16 = 1, Bit B3 = 1"},{n:3,sub:null,a:"Verificare il Metrological Logbook",e:"Evento 58 presente"},{n:4,sub:null,a:"Ripristinare la temperatura entro i limiti",e:"Condizione risolta"},{n:5,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B16 = 0"},{n:6,sub:null,a:"Verificare il logbook",e:"Evento 59 presente"},{n:null,sub:"Sottocaso 17.2 — Temperatura sotto minimo",a:"",e:""},{n:7,sub:null,a:"Simulare una temperatura inferiore al minimo fisico accettato",e:"Condizione attivata"},{n:8,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B16 = 1"},{n:9,sub:null,a:"Verificare il logbook",e:"Evento 60 presente"},{n:10,sub:null,a:"Ripristinare la temperatura",e:"Condizione risolta"},{n:11,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B16 = 0"},{n:12,sub:null,a:"Verificare il logbook",e:"Evento 61 presente"},{n:null,sub:"Sottocaso 17.3 — Guasto sensore temperatura",a:"",e:""},{n:13,sub:null,a:"Simulare il guasto del sensore di temperatura",e:"Guasto attivato"},{n:14,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B16 = 1"},{n:15,sub:null,a:"Verificare il logbook",e:"Evento 62 presente"},{n:16,sub:null,a:"Ripristinare il sensore",e:"Guasto risolto"},{n:17,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B16 = 0"},{n:18,sub:null,a:"Verificare il logbook",e:"Evento 63 presente"}],criteria:["Evento 58 (T > max) attiva B16","Evento 60 (T < min) attiva B16","Evento 62 (T guasto) attiva B16","Evento 59 disattiva B16","Evento 61 disattiva B16","Evento 63 disattiva B16","B16 attiva B3"]},
+  {id:"TC-18",bit:"B17",title:"Errore pressione (P > max / P < min / guasto)",evtA:"48, 50, 52",evtR:"49, 51, 53",cat:"pressione",reserved:false,objects:["Current Diagnostic (7-0:96.5.1.255)","Current Absolute Pressure (7-0:42.0.0.255)"],steps:[{n:null,sub:"Sottocaso 18.1 — Pressione sopra massimo",a:"",e:""},{n:1,sub:null,a:"Simulare una pressione superiore al massimo fisico accettato",e:"Condizione attivata"},{n:2,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B17 = 1, Bit B3 = 1"},{n:3,sub:null,a:"Verificare il logbook",e:"Evento 48 presente"},{n:4,sub:null,a:"Ripristinare la pressione entro i limiti",e:"Condizione risolta"},{n:5,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B17 = 0"},{n:6,sub:null,a:"Verificare il logbook",e:"Evento 49 presente"},{n:null,sub:"Sottocaso 18.2 — Pressione sotto minimo",a:"",e:""},{n:7,sub:null,a:"Simulare una pressione inferiore al minimo fisico accettato",e:"Condizione attivata"},{n:8,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B17 = 1"},{n:9,sub:null,a:"Verificare il logbook",e:"Evento 50 presente"},{n:10,sub:null,a:"Ripristinare la pressione",e:"Condizione risolta"},{n:11,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B17 = 0"},{n:12,sub:null,a:"Verificare il logbook",e:"Evento 51 presente"},{n:null,sub:"Sottocaso 18.3 — Guasto sensore pressione",a:"",e:""},{n:13,sub:null,a:"Simulare il guasto del sensore di pressione",e:"Guasto attivato"},{n:14,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B17 = 1"},{n:15,sub:null,a:"Verificare il logbook",e:"Evento 52 presente"},{n:16,sub:null,a:"Ripristinare il sensore",e:"Guasto risolto"},{n:17,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B17 = 0"},{n:18,sub:null,a:"Verificare il logbook",e:"Evento 53 presente"}],criteria:["Evento 48 (P > max) attiva B17","Evento 50 (P < min) attiva B17","Evento 52 (P guasto) attiva B17","Evento 49 disattiva B17","Evento 51 disattiva B17","Evento 53 disattiva B17","B17 attiva B3"]},
+  {id:"TC-19",bit:"B18",title:"Errore fattore di compressibilità Z",evtA:"32",evtR:"33",cat:"misura",reserved:false,objects:["Current Diagnostic (7-0:96.5.1.255)","Compressibility factor at metering conditions (10-0:53.0.0.255)"],steps:[{n:1,sub:null,a:"Configurare il GdM con valori di composizione del gas che portano Z fuori dai limiti fisici (es. < 0.5 o > 1.5)",e:"Parametri impostati"},{n:2,sub:null,a:"Attendere il ricalcolo del fattore di compressibilità",e:"Calcolo eseguito"},{n:3,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B18 = 1, Bit B3 = 1"},{n:4,sub:null,a:"Verificare il Metrological Logbook",e:"Evento 32 presente"},{n:5,sub:null,a:"Correggere i parametri di composizione del gas con valori validi",e:"Parametri corretti"},{n:6,sub:null,a:"Attendere il ricalcolo",e:"Calcolo eseguito"},{n:7,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B18 = 0"},{n:8,sub:null,a:"Verificare il logbook",e:"Evento 33 presente"}],criteria:["Evento 32 attiva B18","Evento 33 disattiva B18","B18 attiva B3"]},
+  {id:"TC-20",bit:"B19",title:"Errore calcolo C",evtA:"Interno (fabbricante)",evtR:"Interno",cat:"misura",reserved:false,objects:["Current Diagnostic (7-0:96.5.1.255)","Conversion factor (10-0:52.0.0.255)"],steps:[{n:1,sub:null,a:"Configurare il GdM con parametri che rendono impossibile il calcolo di C",e:"Condizione critica"},{n:2,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B19 = 1, Bit B3 = 1"},{n:3,sub:null,a:"Verificare il logbook",e:"Evento riservato al fabbricante presente"},{n:4,sub:null,a:"Correggere i parametri",e:"Parametri validi"},{n:5,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B19 = 0"},{n:6,sub:null,a:"Verificare il logbook",e:"Evento di ripristino presente"}],criteria:["B19 si attiva quando il calcolo di C non è possibile","B19 attiva B3","Evento appropriato registrato nel logbook"]},
+  {id:"TC-21",bit:"B20",title:"Mancanza alimentazione esterna > 30 min",evtA:"76",evtR:"77",cat:"alimentazione",reserved:false,objects:["Current Diagnostic (7-0:96.5.1.255)"],steps:[{n:1,sub:null,a:"Interrompere l'alimentazione esterna del GdM (es. 230V)",e:"Alimentazione esterna assente"},{n:2,sub:null,a:"Attendere 30 minuti",e:"Tempo trascorso"},{n:3,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B20 = 1"},{n:4,sub:null,a:"Verificare il logbook",e:"Evento 76 presente"},{n:5,sub:null,a:"Ripristinare l'alimentazione esterna",e:"Alimentazione ripristinata"},{n:6,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B20 = 0"},{n:7,sub:null,a:"Verificare il logbook",e:"Evento 77 presente"}],criteria:["Evento 76 attiva B20 dopo 30 minuti di assenza alimentazione","Evento 77 disattiva B20 al ripristino"]},
+  {id:"TC-22",bit:"B21",title:"Registrazione periodica non usabile",evtA:"Interno",evtR:"Fine periodo",cat:"registro",reserved:false,objects:["Current Diagnostic (7-0:96.5.1.255)","Hourly Load Profile (7-0:99.99.2.255)","Daily Load Profile (7-0:99.99.3.255)"],steps:[{n:1,sub:null,a:"Simulare una condizione in cui per un intero periodo non vengono rilevati campioni validi",e:"Condizione di non usabilità"},{n:2,sub:null,a:"Durante il periodo, leggere il Current Diagnostic",e:"Bit B21 = 1"},{n:3,sub:null,a:"Attendere la chiusura del periodo di registrazione (es. fine dell'ora)",e:"Periodo concluso"},{n:4,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B21 = 0 (azzerato automaticamente)"},{n:5,sub:null,a:"Leggere il profilo orario per il periodo interessato",e:"Bit B6 dell'Hourly Diagnostic (OR di B21 e B6) è impostato a 1"}],criteria:["B21 = 1 durante il periodo con dati non usabili","B21 = 0 automaticamente alla fine del periodo","Il flag di qualità nel profilo storico riflette la condizione"]},
+  {id:"TC-23",bit:"B22",title:"Registrazione periodica incompleta",evtA:"Interno",evtR:"Fine periodo",cat:"registro",reserved:false,objects:["Current Diagnostic (7-0:96.5.1.255)","Hourly Load Profile (7-0:99.99.2.255)"],steps:[{n:1,sub:null,a:"Simulare una condizione in cui il GdM viene spento per 15 minuti durante un'ora di registrazione",e:"Registrazione interrotta"},{n:2,sub:null,a:"Al riavvio, leggere il Current Diagnostic",e:"Bit B22 = 1"},{n:3,sub:null,a:"Attendere la chiusura del periodo di registrazione",e:"Periodo concluso"},{n:4,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B22 = 0 (azzerato automaticamente)"},{n:5,sub:null,a:"Leggere il profilo orario per il periodo interessato",e:"Bit B2 dell'Hourly Diagnostic (mapping di B22) è impostato a 1"}],criteria:["B22 = 1 durante il periodo con registrazione incompleta","B22 = 0 automaticamente alla fine del periodo","Il flag di qualità nel profilo storico riflette la condizione"]},
+  {id:"TC-24",bit:"B23",title:"Riservato — sempre 0",evtA:"N/A",evtR:"N/A",cat:"riservato",reserved:true,objects:["Current Diagnostic (7-0:96.5.1.255)"],steps:[{n:1,sub:null,a:"Leggere il Current Diagnostic in condizioni normali",e:"Bit B23 = 0"},{n:2,sub:null,a:"Eseguire operazioni che potrebbero influenzare bit adiacenti",e:"B23 rimane 0"},{n:3,sub:null,a:"Tentare di scrivere il bit B23",e:"Scrittura ignorata o rifiutata"},{n:4,sub:null,a:"Leggere nuovamente",e:"Bit B23 = 0"}],criteria:["Bit B23 è sempre 0 in ogni condizione operativa"]},
+  {id:"TC-25",bit:"B24",title:"Riservato — sempre 0",evtA:"N/A",evtR:"N/A",cat:"riservato",reserved:true,objects:["Current Diagnostic (7-0:96.5.1.255)"],steps:[{n:1,sub:null,a:"Leggere il Current Diagnostic in condizioni normali",e:"Bit B24 = 0"},{n:2,sub:null,a:"Eseguire operazioni che potrebbero influenzare bit adiacenti",e:"B24 rimane 0"},{n:3,sub:null,a:"Tentare di scrivere il bit B24",e:"Scrittura ignorata o rifiutata"},{n:4,sub:null,a:"Leggere nuovamente",e:"Bit B24 = 0"}],criteria:["Bit B24 è sempre 0 in ogni condizione operativa"]},
+  {id:"TC-26",bit:"B25",title:"Portata sopra Qmax",evtA:"38",evtR:"39",cat:"portata",reserved:false,objects:["Current Diagnostic (7-0:96.5.1.255)"],steps:[{n:1,sub:null,a:"Applicare una portata di gas superiore alla Qmax dichiarata del contatore",e:"Portata > Qmax"},{n:2,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B25 = 1"},{n:3,sub:null,a:"Verificare il logbook",e:"Evento 38 presente"},{n:4,sub:null,a:"Ridurre la portata al di sotto di Qmax",e:"Portata normale"},{n:5,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B25 = 0"},{n:6,sub:null,a:"Verificare il logbook",e:"Evento 39 presente"}],criteria:["Evento 38 attiva B25","Evento 39 disattiva B25"]},
+  {id:"TC-27",bit:"B26",title:"Riservato — sempre 0",evtA:"N/A",evtR:"N/A",cat:"riservato",reserved:true,objects:["Current Diagnostic (7-0:96.5.1.255)"],steps:[{n:1,sub:null,a:"Leggere il Current Diagnostic in condizioni normali",e:"Bit B26 = 0"},{n:2,sub:null,a:"Eseguire operazioni che potrebbero influenzare bit adiacenti",e:"B26 rimane 0"},{n:3,sub:null,a:"Tentare di scrivere il bit B26",e:"Scrittura ignorata o rifiutata"},{n:4,sub:null,a:"Leggere nuovamente",e:"Bit B26 = 0"}],criteria:["Bit B26 è sempre 0 in ogni condizione operativa"]},
+  {id:"TC-28",bit:"B27",title:"Guasto dispositivo misuratore primario",evtA:"78",evtR:"79",cat:"misuratore",reserved:false,objects:["Current Diagnostic (7-0:96.5.1.255)"],steps:[{n:1,sub:null,a:"Simulare il guasto del dispositivo misuratore primario",e:"Guasto attivato"},{n:2,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B27 = 1"},{n:3,sub:null,a:"Verificare il Metrological Logbook",e:"Evento 78 presente"},{n:4,sub:null,a:"Ripristinare il misuratore primario",e:"Guasto risolto"},{n:5,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B27 = 0"},{n:6,sub:null,a:"Verificare il logbook",e:"Evento 79 presente"}],criteria:["Evento 78 attiva B27","Evento 79 disattiva B27"]},
+  {id:"TC-29",bit:"B28",title:"Disconnessione dispositivo misuratore primario",evtA:"4",evtR:"5",cat:"misuratore",reserved:false,objects:["Current Diagnostic (7-0:96.5.1.255)"],steps:[{n:1,sub:null,a:"Simulare la disconnessione del dispositivo misuratore primario",e:"Disconnessione attivata"},{n:2,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B28 = 1"},{n:3,sub:null,a:"Verificare il Metrological Logbook",e:"Evento 4 presente"},{n:4,sub:null,a:"Riconnettere il misuratore primario",e:"Riconnessione eseguita"},{n:5,sub:null,a:"Leggere il Current Diagnostic",e:"Bit B28 = 0"},{n:6,sub:null,a:"Verificare il logbook",e:"Evento 5 presente"}],criteria:["Evento 4 attiva B28","Evento 5 disattiva B28","B28 si disattiva al ripristino della connessione"]},
+  {id:"TC-30",bit:"B29",title:"Riservato — sempre 0",evtA:"N/A",evtR:"N/A",cat:"riservato",reserved:true,objects:["Current Diagnostic (7-0:96.5.1.255)"],steps:[{n:1,sub:null,a:"Leggere il Current Diagnostic in condizioni normali",e:"Bit B29 = 0"},{n:2,sub:null,a:"Eseguire operazioni che potrebbero influenzare bit adiacenti",e:"B29 rimane 0"},{n:3,sub:null,a:"Tentare di scrivere il bit B29",e:"Scrittura ignorata o rifiutata"},{n:4,sub:null,a:"Leggere nuovamente",e:"Bit B29 = 0"}],criteria:["Bit B29 è sempre 0 in ogni condizione operativa"]},
+  {id:"TC-31",bit:"B30",title:"Riservato — sempre 0",evtA:"N/A",evtR:"N/A",cat:"riservato",reserved:true,objects:["Current Diagnostic (7-0:96.5.1.255)"],steps:[{n:1,sub:null,a:"Leggere il Current Diagnostic in condizioni normali",e:"Bit B30 = 0"},{n:2,sub:null,a:"Eseguire operazioni che potrebbero influenzare bit adiacenti",e:"B30 rimane 0"},{n:3,sub:null,a:"Tentare di scrivere il bit B30",e:"Scrittura ignorata o rifiutata"},{n:4,sub:null,a:"Leggere nuovamente",e:"Bit B30 = 0"}],criteria:["Bit B30 è sempre 0 in ogni condizione operativa"]},
+  {id:"TC-32",bit:"B31",title:"Riservato — sempre 0",evtA:"N/A",evtR:"N/A",cat:"riservato",reserved:true,objects:["Current Diagnostic (7-0:96.5.1.255)"],steps:[{n:1,sub:null,a:"Leggere il Current Diagnostic in condizioni normali",e:"Bit B31 = 0"},{n:2,sub:null,a:"Eseguire operazioni che potrebbero influenzare bit adiacenti",e:"B31 rimane 0"},{n:3,sub:null,a:"Tentare di scrivere il bit B31",e:"Scrittura ignorata o rifiutata"},{n:4,sub:null,a:"Leggere nuovamente",e:"Bit B31 = 0"}],criteria:["Bit B31 è sempre 0 in ogni condizione operativa"]}
+];
+
+// ════════════════ STATE ════════════════
+const bcState={}, bsState={}, evState={}, tcState={};
+BC_DATA.forEach(b=>bcState[b.id]={status:b.reserved?"R":"",notes:""});
+BS_DATA.forEach(b=>bsState[b.id+"_s"]={status:"",notes:""});
+EV_DATA.forEach(e=>evState[e[0]]={status:"",notes:""});
+TC_DATA.forEach(tc=>tcState[tc.id]={open:false,criteria:tc.criteria.map(()=>false),steps:{},note:""});
+
+// ════════════════ NAV ════════════════
+function switchMain(name,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('p-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+function switchBit(name,btn){
+  document.querySelectorAll('.bpanel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.btab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('bp-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ════════════════ BIT COMPLETA ════════════════
+function mkBadge(v,cls,lbl){return v?`<span class="pill ${cls}" style="font-size:9px">${lbl}</span>`:`<span style="font-size:9px;color:var(--text3)">—</span>`;}
+function mkDot(v,cls){return `<span class="dot ${v?cls:'dot-e'}" style="width:9px;height:9px"></span>`;}
+
+function renderBC(){
+  const q=document.getElementById('bc-srch').value.toLowerCase();
+  const flt=document.getElementById('bc-flt').value;
+  const tbody=document.getElementById('bc-tbody');
+  tbody.innerHTML='';
+  BC_DATA.forEach(b=>{
+    const s=bcState[b.id].status;
+    if(flt==='todo'&&(s==='OK'||s==='NA'||s==='KO'||s==='R')) return;
+    if(flt==='ko'&&s!=='KO') return;
+    if(flt==='res'&&!b.reserved) return;
+    if(!flt&&b.reserved) return;
+    if(q&&!b.id.toLowerCase().includes(q)&&!b.desc.toLowerCase().includes(q)&&!b.cat.toLowerCase().includes(q)) return;
+    let descH=`<div style="font-size:13px">${b.desc}</div>`;
+    descH+=`<div style="margin-top:3px"><span class="pill pill-gray" style="font-size:9px">${b.cat}</span>`;
+    if(b.cl.includes('b1'))descH+=` <span class="pill pill-green" style="font-size:9px">B1</span>`;
+    if(b.cl.includes('b2'))descH+=` <span class="pill pill-blue" style="font-size:9px">B2</span>`;
+    descH+='</div>';
+    if(b.subs)b.subs.forEach(s2=>descH+=`<div style="font-size:11px;color:var(--text3);margin-top:2px">↳ ${s2.d}</div>`);
+    let actH=`<span class="mono">${b.act}</span>`;
+    let rstH=`<span class="mono">${b.rst}</span>`;
+    if(b.subs){b.subs.forEach(s2=>{actH+=`<div class="mono" style="color:var(--text3);font-size:10px">${s2.a}</div>`;rstH+=`<div class="mono" style="color:var(--text3);font-size:10px">${s2.r}</div>`;});}
+    const infoBtn=b.norm?`<button onclick="toggleNorm('${b.id}',this)" style="font-size:10px;padding:1px 5px;border-radius:4px;border:1px solid var(--border2);background:none;color:var(--text3);cursor:pointer;margin-top:3px">ⓘ norma</button>`:'';
+    const tr=document.createElement('tr');
+    if(b.reserved)tr.style.opacity='0.4';
+    tr.innerHTML=`<td><span class="mono" style="font-weight:600">${b.id}</span>${infoBtn?'<br>'+infoBtn:''}</td>
+      <td>${descH}</td><td>${actH}</td><td>${rstH}</td>
+      <td><select onchange="setBcStatus('${b.id}',this.value)">
+        <option value="">— scegli —</option>
+        <option value="OK">✓ OK</option>
+        <option value="KO">✗ KO</option>
+        <option value="NA">N/A</option>
+        ${b.reserved?'<option value="R">Riservato</option>':''}
+      </select></td>
+      <td><input type="text" style="width:100%;font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text)" placeholder="note…" value="${bcState[b.id].notes}" oninput="bcState['${b.id}'].notes=this.value"></td>`;
+    tr.querySelector('select').value=bcState[b.id].status;
+    tbody.appendChild(tr);
+    if(b.norm){
+      const nr=document.createElement('tr');nr.id='nr-'+b.id;nr.className='norm-row';nr.style.display='none';
+      nr.innerHTML=`<td colspan="6"><strong>Nota normativa:</strong> ${b.norm}</td>`;
+      tbody.appendChild(nr);
+    }
+  });
+  updateBcStats();
+}
+function toggleNorm(id,btn){
+  const nr=document.getElementById('nr-'+id);
+  const open=nr.style.display!=='none';
+  nr.style.display=open?'none':'table-row';
+  btn.style.background=open?'none':'var(--bg3)';
+}
+function setBcStatus(id,v){bcState[id].status=v;updateBcStats();}
+function updateBcStats(){
+  let done=0,ok=0,ko=0,na=0;
+  BC_DATA.forEach(b=>{
+    const s=bcState[b.id].status;
+    if(s==='OK'){done++;ok++;}else if(s==='KO'){done++;ko++;}else if(s==='NA'){done++;na++;}else if(s==='R')done++;
+  });
+  document.getElementById('bc-done').textContent=done+'/32';
+  document.getElementById('bc-ok').textContent=ok;
+  document.getElementById('bc-ko').textContent=ko;
+  document.getElementById('bc-na').textContent=na;
+  document.getElementById('bc-prog').style.width=Math.round(done/32*100)+'%';
+}
+function resetBit(){if(!confirm('Azzera bit diagnostici?'))return;BC_DATA.forEach(b=>bcState[b.id]={status:b.reserved?'R':'',notes:''});renderBC();}
+function exportBit(){
+  let lines=['UNI/TS 11291-14-2 — Bit diagnostici completi','='.repeat(50),''];
+  BC_DATA.forEach(b=>{const s=bcState[b.id].status||'—';const n=bcState[b.id].notes?` | ${bcState[b.id].notes}`:'';lines.push(`${b.id.padEnd(4)} ${b.desc.substring(0,46).padEnd(48)} [${s}]${n}`);});
+  lines.push('',`Esportato: ${new Date().toLocaleString('it-IT')}`);
+  navigator.clipboard.writeText(lines.join('\n')).then(()=>{alert('Copiato negli appunti!');});
+}
+
+// ════════════════ BIT SINTETICA ════════════════
+function initBS(){
+  const tbody=document.getElementById('bs-tbody');
+  BS_DATA.forEach(b=>{
+    const key=b.id+'_s';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><span class="mono" style="font-weight:600">${b.id}</span></td>
+      <td><div>${b.desc}</div><div style="margin-top:3px"><span class="pill pill-gray" style="font-size:9px">→ ${b.ref}</span></div></td>
+      <td><span class="mono">${b.act}</span></td>
+      <td><span class="mono">${b.rst}</span></td>
+      <td><select onchange="setBsStatus('${key}',this.value)">
+        <option value="">— scegli —</option>
+        <option value="OK">✓ OK</option><option value="KO">✗ KO</option><option value="NA">N/A</option>
+      </select></td>
+      <td><input type="text" style="width:100%;font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text)" placeholder="note…" oninput="bsState['${key}'].notes=this.value"></td>`;
+    tbody.appendChild(tr);
+  });
+}
+function setBsStatus(key,v){bsState[key].status=v;updateBsStats();}
+function updateBsStats(){
+  let done=0,ok=0,ko=0,na=0;
+  BS_DATA.forEach(b=>{const s=bsState[b.id+'_s'].status;if(s==='OK'){done++;ok++;}else if(s==='KO'){done++;ko++;}else if(s==='NA'){done++;na++;}});
+  document.getElementById('bs-done').textContent=done+'/8';
+  document.getElementById('bs-ok').textContent=ok;
+  document.getElementById('bs-ko').textContent=ko;
+  document.getElementById('bs-na').textContent=na;
+  document.getElementById('bs-prog').style.width=Math.round(done/8*100)+'%';
+}
+function resetBitSint(){if(!confirm('Azzera diagnostica sintetica?'))return;BS_DATA.forEach(b=>bsState[b.id+'_s']={status:'',notes:''});document.querySelectorAll('#bs-tbody select').forEach(s=>s.value='');updateBsStats();}
+
+// ════════════════ EVENTI ════════════════
+function initEvtCat(){
+  const sel=document.getElementById('ev-cat');
+  const seen={};
+  EV_DATA.forEach(e=>{if(!seen[e[2]]){seen[e[2]]=1;const o=document.createElement('option');o.value=e[2];o.textContent=catNames[e[2]]||e[2];sel.appendChild(o);}});
+}
+function renderEvt(){
+  const q=document.getElementById('ev-srch').value.toLowerCase();
+  const cat=document.getElementById('ev-cat').value;
+  const flt=document.getElementById('ev-flt').value;
+  const tbody=document.getElementById('ev-tbody');
+  tbody.innerHTML='';
+  let tot=0;
+  EV_DATA.forEach(e=>{
+    const [code,desc,c,R,LM,OS,B2]=e;
+    const isRes=c==='RIS';
+    const st=evState[code].status;
+    if(flt==='reg'&&!R)return;
+    if(flt==='lm'&&!LM)return;
+    if(flt==='b2'&&!B2)return;
+    if(flt==='ko'&&st!=='KO')return;
+    if(flt==='todo'&&(st==='OK'||st==='NA'||st==='KO'))return;
+    if(flt==='res'&&!isRes)return;
+    if(flt!=='res'&&isRes)return;
+    if(cat&&c!==cat)return;
+    if(q&&!String(code).includes(q)&&!desc.toLowerCase().includes(q)&&!(catNames[c]||'').toLowerCase().includes(q))return;
+    tot++;
+    const hasNote=D2[code];
+    const tr=document.createElement('tr');
+    if(isRes)tr.style.opacity='0.35';
+    if(!R&&!LM&&!OS&&!B2&&!isRes)tr.style.opacity='0.6';
+    tr.innerHTML=`<td><span class="mono" style="font-weight:600">${code}</span></td>
+      <td><span style="font-size:12px">${desc}</span>${hasNote?`<span class="note-tag" title="${hasNote}">D.2</span>`:''}<br><span class="pill pill-gray" style="font-size:9px">${catNames[c]||c}</span></td>
+      <td class="flag-c">${mkDot(R,'dot-g')}</td>
+      <td class="flag-c">${mkBadge(LM,'pill-green','LM')}</td>
+      <td class="flag-c">${mkBadge(OS,'pill-purple','OS')}</td>
+      <td class="flag-c">${mkDot(B2,'dot-b')}</td>
+      <td><select onchange="setEvStatus(${code},this.value)">
+        <option value="">— scegli —</option>
+        <option value="OK">✓ OK</option><option value="KO">✗ KO</option><option value="NA">N/A</option>
+      </select></td>
+      <td><input type="text" style="width:100%;font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text)" placeholder="note…" value="${evState[code].notes}" oninput="evState[${code}].notes=this.value"></td>`;
+    tr.querySelector('select').value=evState[code].status;
+    tbody.appendChild(tr);
+  });
+  updateEvStats(tot);
+}
+function setEvStatus(code,v){evState[code].status=v;updateEvStats();}
+function updateEvStats(tot){
+  const all=EV_DATA.filter(e=>e[2]!=='RIS');
+  let done=0,ok=0,ko=0,na=0;
+  all.forEach(e=>{const s=evState[e[0]].status;if(s==='OK'){done++;ok++;}else if(s==='KO'){done++;ko++;}else if(s==='NA'){done++;na++;}});
+  document.getElementById('ev-tot').textContent=all.length;
+  document.getElementById('ev-done').textContent=done;
+  document.getElementById('ev-ok').textContent=ok;
+  document.getElementById('ev-ko').textContent=ko;
+  document.getElementById('ev-na').textContent=na;
+  document.getElementById('ev-prog').style.width=Math.round(done/all.length*100)+'%';
+}
+function resetEvt(){if(!confirm('Azzera tutti gli eventi?'))return;EV_DATA.forEach(e=>evState[e[0]]={status:'',notes:''});renderEvt();}
+function exportEvt(){
+  let lines=['UNI/TS 11291-14-2 — Codici evento (App. D)','='.repeat(50),''];
+  EV_DATA.filter(e=>e[2]!=='RIS').forEach(e=>{const s=evState[e[0]].status||'—';const n=evState[e[0]].notes?` | ${evState[e[0]].notes}`:'';lines.push(`${String(e[0]).padStart(3)}  ${e[1].substring(0,50).padEnd(52)} [${s}]${n}`);});
+  lines.push('',`Esportato: ${new Date().toLocaleString('it-IT')}`);
+  navigator.clipboard.writeText(lines.join('\n')).then(()=>{alert('Copiato negli appunti!');});
+}
+
+// ════════════════ TEST CASE ════════════════
+function tcStatus(tc){
+  const s=tcState[tc.id];
+  const c=s.criteria.filter(Boolean).length;
+  if(c===0)return'todo';
+  if(c===tc.criteria.length)return'pass';
+  return'partial';
+}
+function badgeHTML(st){
+  const m={pass:'pill-green',fail:'pill-red',partial:'pill-amber',todo:'pill-gray'};
+  const l={pass:'Passato',fail:'Fallito',partial:'Parziale',todo:'Da eseguire'};
+  return `<span class="tc-badge ${m[st]||'pill-gray'}">${l[st]||'—'}</span>`;
+}
+function renderTC(){
+  const q=document.getElementById('tc-srch').value.toLowerCase();
+  const flt=document.getElementById('tc-flt').value;
+  const list=document.getElementById('tc-list');
+  list.innerHTML='';
+  TC_DATA.forEach(tc=>{
+    const st=tcStatus(tc);
+    if(flt==='todo'&&st!=='todo')return;
+    if(flt==='pass'&&st!=='pass')return;
+    if(flt==='partial'&&st!=='partial')return;
+    if(flt==='res'&&!tc.reserved)return;
+    if(!flt&&tc.reserved&&flt!=='res'){}
+    if(q&&!tc.id.toLowerCase().includes(q)&&!tc.bit.toLowerCase().includes(q)&&!tc.title.toLowerCase().includes(q)&&!tc.cat.includes(q))return;
+    list.appendChild(buildTCCard(tc));
+  });
+  updateTCStats();
+}
+function buildTCCard(tc){
+  const s=tcState[tc.id];
+  const st=tcStatus(tc);
+  const pct=tc.criteria.length>0?Math.round(s.criteria.filter(Boolean).length/tc.criteria.length*100):0;
+  let stepRows='';
+  tc.steps.forEach(step=>{
+    if(step.n===null){stepRows+=`<tr><td colspan="4" class="step-sub-row"><td>${step.sub}</td></td></tr>`;return;}
+    const resH=step.e.replace(/Bit (B\d+)/g,'<b>$1</b>').replace(/Evento (\d+)/g,'Evento <b>$1</b>');
+    stepRows+=`<tr>
+      <td class="mono" style="color:var(--text3);width:28px">${step.n}</td>
+      <td style="font-size:12px">${step.a}</td>
+      <td class="step-res" style="color:var(--text2);font-size:12px">${resH}</td>
+      <td><select onchange="setTCStep('${tc.id}',${step.n},this.value)" style="width:60px">
+        <option value="">—</option><option value="ok">✓</option><option value="ko">✗</option><option value="na">N/A</option>
+      </select></td></tr>`;
+  });
+  let critRows=tc.criteria.map((c,i)=>`<li>
+    <input type="checkbox" class="crit-cb" ${s.criteria[i]?'checked':''} onchange="setTCCrit('${tc.id}',${i},this.checked)">
+    <span class="crit-txt ${s.criteria[i]?'checked':''}">${c}</span>
+  </li>`).join('');
+  const card=document.createElement('div');
+  card.className='tc-card';card.id='tcc-'+tc.id;
+  card.innerHTML=`<div class="tc-head" onclick="toggleTC('${tc.id}')">
+    <span class="tc-id">${tc.id}</span>
+    <span class="tc-bit-b">${tc.bit}</span>
+    <span class="tc-title">${tc.title}</span>
+    <span class="tc-evts">▸ ${tc.evtA}</span>
+    ${badgeHTML(st)}
+    <div class="cprog" style="width:60px"><div class="cpf" id="cpf-${tc.id}" style="width:${pct}%"></div></div>
+    <span class="chev ${s.open?'open':''}" id="chev-${tc.id}">&#9654;</span>
+  </div>
+  <div class="tc-body ${s.open?'open':''}" id="tcb-${tc.id}">
+    <div class="meta-row">
+      <div><b>Evento attivazione:</b> ${tc.evtA}</div>
+      <div><b>Evento ripristino:</b> ${tc.evtR}</div>
+      <div><b>Oggetti COSEM:</b> ${tc.objects.map(o=>`<code style="font-family:var(--mono);font-size:10px">${o}</code>`).join(', ')}</div>
+    </div>
+    <div class="sub-label">Procedura</div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th style="width:28px">#</th><th>Azione</th><th>Risultato atteso</th><th style="width:64px">Esito</th></tr></thead>
+      <tbody>${stepRows}</tbody>
+    </table></div>
+    <div class="sub-label">Criteri di accettazione</div>
+    <ul class="crit-list">${critRows}</ul>
+    <div class="sub-label">Note</div>
+    <textarea style="min-height:48px" placeholder="Annotazioni, anomalie, riferimenti SW…" oninput="tcState['${tc.id}'].note=this.value">${s.note}</textarea>
+  </div>`;
+  tc.steps.filter(st=>st.n!==null).forEach(st=>{
+    const sv=s.steps[st.n]||'';
+    const sel=card.querySelectorAll(`select`);
+    sel.forEach(s2=>{if(s2.onchange&&s2.onchange.toString().includes(','+st.n+','))s2.value=sv;});
+  });
+  return card;
+}
+function toggleTC(id){
+  tcState[id].open=!tcState[id].open;
+  document.getElementById('tcb-'+id).classList.toggle('open',tcState[id].open);
+  document.getElementById('chev-'+id).classList.toggle('open',tcState[id].open);
+}
+function setTCStep(id,n,v){tcState[id].steps[n]=v;}
+function setTCCrit(id,i,v){
+  tcState[id].criteria[i]=v;
+  const card=document.getElementById('tcc-'+id);
+  const spans=card.querySelectorAll('.crit-txt');
+  if(spans[i])spans[i].classList.toggle('checked',v);
+  const st=tcStatus(TC_DATA.find(t=>t.id===id));
+  const badge=card.querySelector('.tc-badge');
+  const m={pass:'pill-green',fail:'pill-red',partial:'pill-amber',todo:'pill-gray'};
+  const l={pass:'Passato',fail:'Fallito',partial:'Parziale',todo:'Da eseguire'};
+  badge.className='tc-badge '+(m[st]||'pill-gray');badge.textContent=l[st]||'—';
+  const tc=TC_DATA.find(t=>t.id===id);
+  const pct=Math.round(tcState[id].criteria.filter(Boolean).length/tc.criteria.length*100);
+  const cpf=document.getElementById('cpf-'+id);
+  if(cpf)cpf.style.width=pct+'%';
+  updateTCStats();
+}
+function updateTCStats(){
+  let pass=0,fail=0,par=0,todo=0;
+  TC_DATA.forEach(tc=>{const s=tcStatus(tc);if(s==='pass')pass++;else if(s==='fail')fail++;else if(s==='partial')par++;else todo++;});
+  document.getElementById('tc-pass').textContent=pass;
+  document.getElementById('tc-fail').textContent=fail;
+  document.getElementById('tc-par').textContent=par;
+  document.getElementById('tc-todo').textContent=todo;
+  document.getElementById('tc-prog').style.width=Math.round((pass+fail+par)/TC_DATA.length*100)+'%';
+}
+function expandAllTC(open){TC_DATA.forEach(tc=>{tcState[tc.id].open=open;});renderTC();}
+function resetTC(){if(!confirm('Azzera tutti i test case?'))return;TC_DATA.forEach(tc=>tcState[tc.id]={open:false,criteria:tc.criteria.map(()=>false),steps:{},note:''});renderTC();}
+function exportTC(){
+  let lines=['UNI/TS 11291-14-2 — Test case bit diagnostici GdM','='.repeat(54),''];
+  TC_DATA.forEach(tc=>{
+    const s=tcState[tc.id];const st=tcStatus(tc);
+    const c=s.criteria.filter(Boolean).length;
+    lines.push(`${tc.id} [${tc.bit}] ${tc.title}`);
+    lines.push(`  Stato: ${st==='pass'?'PASSATO':st==='partial'?'PARZIALE':'DA ESEGUIRE'} — Criteri: ${c}/${tc.criteria.length}`);
+    tc.criteria.forEach((cr,i)=>lines.push(`  [${s.criteria[i]?'X':' '}] ${cr}`));
+    if(s.note)lines.push(`  Note: ${s.note}`);
+    lines.push('');
+  });
+  lines.push(`Esportato: ${new Date().toLocaleString('it-IT')}`);
+  navigator.clipboard.writeText(lines.join('\n')).then(()=>{alert('Copiato negli appunti!');});
+}
+
+// ════════════════ PERSISTENZA localStorage ════════════════
+const LS_KEY = 'dlms_cosem_v1';
+
+function saveState() {
+  try {
+    const now = new Date().toISOString();
+    const snap = {
+      version: 1,
+      savedAt: now,
+      importedAt: (()=>{ try{ const p=JSON.parse(localStorage.getItem(LS_KEY)); return p&&p.importedAt||null; }catch(e){return null;} })(),
+      bc: bcState,
+      bs: bsState,
+      ev: evState,
+      tc: Object.fromEntries(Object.entries(tcState).map(([k,v])=>[k,{criteria:v.criteria,steps:v.steps,note:v.note,open:false}]))
+    };
+    localStorage.setItem(LS_KEY, JSON.stringify(snap));
+    updateStatoBox(snap);
+  } catch(e) {}
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return;
+    const snap = JSON.parse(raw);
+    if (snap.bc) Object.entries(snap.bc).forEach(([k,v])=>{ if(bcState[k]) bcState[k]=v; });
+    if (snap.bs) Object.entries(snap.bs).forEach(([k,v])=>{ if(bsState[k]) bsState[k]=v; });
+    if (snap.ev) Object.entries(snap.ev).forEach(([k,v])=>{ if(evState[k]) evState[k]=v; });
+    if (snap.tc) Object.entries(snap.tc).forEach(([k,v])=>{ if(tcState[k]) tcState[k]={...tcState[k],...v,open:false}; });
+    updateStatoBox(snap);
+  } catch(e) {}
+}
+
+// hook automatico su ogni modifica
+const _origSetBcStatus = setBcStatus;
+setBcStatus = function(id,v){ _origSetBcStatus(id,v); saveState(); };
+const _origSetBsStatus = setBsStatus;
+setBsStatus = function(key,v){ _origSetBsStatus(key,v); saveState(); };
+const _origSetEvStatus = setEvStatus;
+setEvStatus = function(code,v){ _origSetEvStatus(code,v); saveState(); };
+const _origSetTCCrit = setTCCrit;
+setTCCrit = function(id,i,v){ _origSetTCCrit(id,i,v); saveState(); };
+const _origSetTCStep = setTCStep;
+setTCStep = function(id,n,v){ _origSetTCStep(id,n,v); saveState(); };
+
+// salva anche note e input di testo con debounce
+let _saveTimer;
+document.addEventListener('input', function(e){
+  if(e.target.tagName==='TEXTAREA'||e.target.placeholder==='note…'){
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(saveState, 600);
+  }
+});
+
+function fmtDate(iso){
+  if(!iso) return '—';
+  try { return new Date(iso).toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
+  catch(e){ return iso; }
+}
+
+function updateStatoBox(snap){
+  const el_local = document.getElementById('ind-local');
+  const el_json  = document.getElementById('ind-json');
+  if(!el_local || !el_json) return;
+  const local = snap.savedAt || null;
+  const imported = snap.importedAt || null;
+  const importedFrom = snap.importedFrom || null;
+  el_local.textContent = fmtDate(local);
+  if(imported){
+    el_json.textContent = fmtDate(imported) + (importedFrom ? ' (file del ' + fmtDate(importedFrom) + ')' : '');
+    // evidenzia se il JSON importato è più vecchio del salvataggio locale
+    const stale = local && imported && new Date(imported) < new Date(local) && (new Date(local)-new Date(imported)) > 60000;
+    el_json.style.color = stale ? 'var(--amber)' : 'var(--green)';
+  } else {
+    el_json.textContent = '—';
+    el_json.style.color = 'var(--text3)';
+  }
+}
+
+
+  const snap = {
+    version: 1,
+    timestamp: new Date().toISOString(),
+    label: 'DLMS/COSEM GdM — UNI/TS 11291-14-2',
+    bc: bcState,
+    bs: bsState,
+    ev: evState,
+    tc: Object.fromEntries(Object.entries(tcState).map(([k,v])=>[k,{criteria:v.criteria,steps:v.steps,note:v.note}]))
+  };
+  const blob = new Blob([JSON.stringify(snap, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const ts = new Date().toISOString().slice(0,16).replace('T','_').replace(':','');
+  a.href = url;
+  a.download = 'dlms_cosem_stato_' + ts + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importJSON(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try {
+      const snap = JSON.parse(e.target.result);
+      if(!snap.bc && !snap.tc) { alert('File non valido o formato non riconosciuto.'); return; }
+      if(!confirm('Sovrascrivere lo stato corrente con i dati importati?')) { input.value=''; return; }
+      if(snap.bc) Object.entries(snap.bc).forEach(([k,v])=>{ if(bcState[k]) bcState[k]=v; });
+      if(snap.bs) Object.entries(snap.bs).forEach(([k,v])=>{ if(bsState[k]) bsState[k]=v; });
+      if(snap.ev) Object.entries(snap.ev).forEach(([k,v])=>{ if(evState[k]) evState[k]=v; });
+      if(snap.tc) Object.entries(snap.tc).forEach(([k,v])=>{ if(tcState[k]) tcState[k]={...tcState[k],...v,open:false}; });
+      snap.importedAt = new Date().toISOString();
+      snap.importedFrom = snap.timestamp || snap.savedAt || null;
+      saveState();
+      // forza aggiornamento importedAt nel localStorage
+      try {
+        const cur = JSON.parse(localStorage.getItem(LS_KEY));
+        cur.importedAt = snap.importedAt;
+        cur.importedFrom = snap.importedFrom;
+        localStorage.setItem(LS_KEY, JSON.stringify(cur));
+        updateStatoBox(cur);
+      } catch(e2){}
+      renderBC(); initBS(); renderEvt(); renderTC();
+      const ts = snap.importedFrom ? ' (file del ' + new Date(snap.importedFrom).toLocaleString('it-IT') + ')' : '';
+      alert('Importazione completata' + ts + '.');
+    } catch(err) {
+      alert('Errore durante l\'importazione: ' + err.message);
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+
+
+  if(!confirm('Cancellare TUTTI i dati salvati e ricominciare da zero?')) return;
+  localStorage.removeItem(LS_KEY);
+  location.reload();
+}
+
+// indicatore nella toolbar
+function updateSaveIndicator(){
+  const el=document.getElementById('save-ind');
+  if(!el) return;
+  el.textContent='Salvato ' + new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  el.style.opacity='1';
+  setTimeout(()=>el.style.opacity='0.4', 2000);
+}
+const __origSave = saveState;
+saveState = function(){ __origSave(); updateSaveIndicator(); };
+
+// ════════════════ STATO REMOTO (stato.json) ════════════════
+let _remoteSnap = null;
+
+async function fetchRemoteState() {
+  const el = document.getElementById('ind-remote');
+  try {
+    const res = await fetch('./stato.json?_=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error('not found');
+    const snap = await res.json();
+    if (!snap.bc && !snap.tc) throw new Error('formato non valido');
+    _remoteSnap = snap;
+
+    const remoteDate = snap.savedAt || snap.timestamp || null;
+    el.textContent = remoteDate ? fmtDate(remoteDate) : 'disponibile';
+    el.style.color = 'var(--green)';
+
+    // confronta con stato locale
+    let localDate = null;
+    try { localDate = JSON.parse(localStorage.getItem(LS_KEY))?.savedAt || null; } catch(e) {}
+
+    const remoteIsNewer = remoteDate && (!localDate || new Date(remoteDate) > new Date(localDate));
+    const remoteIsDifferent = remoteDate !== localDate;
+
+    if (remoteIsDifferent) {
+      const banner = document.getElementById('remote-banner');
+      const desc   = document.getElementById('rb-desc');
+      const title  = document.getElementById('rb-title');
+      if (remoteIsNewer) {
+        title.textContent = 'Stato remoto più recente';
+        desc.textContent  = 'Il file stato.json sul server è stato aggiornato il ' + fmtDate(remoteDate) + '. Vuoi caricarlo?';
+        el.style.color    = 'var(--green)';
+      } else {
+        title.textContent = 'Stato remoto disponibile';
+        desc.textContent  = 'Il file stato.json è del ' + fmtDate(remoteDate) + ', il tuo locale è più recente. Puoi comunque caricarlo.';
+        el.style.color    = 'var(--amber)';
+      }
+      banner.style.display = 'block';
+    }
+  } catch(e) {
+    _remoteSnap = null;
+    el.textContent = 'non trovato';
+    el.style.color = 'var(--text3)';
+  }
+}
+
+function applyRemote() {
+  if (!_remoteSnap) return;
+  if (!confirm('Sovrascrivere lo stato locale con quello remoto?')) return;
+  const snap = _remoteSnap;
+  if (snap.bc) Object.entries(snap.bc).forEach(([k,v])=>{ if(bcState[k]) bcState[k]=v; });
+  if (snap.bs) Object.entries(snap.bs).forEach(([k,v])=>{ if(bsState[k]) bsState[k]=v; });
+  if (snap.ev) Object.entries(snap.ev).forEach(([k,v])=>{ if(evState[k]) evState[k]=v; });
+  if (snap.tc) Object.entries(snap.tc).forEach(([k,v])=>{ if(tcState[k]) tcState[k]={...tcState[k],...v,open:false}; });
+  // registra come importato
+  snap.importedAt   = new Date().toISOString();
+  snap.importedFrom = snap.savedAt || snap.timestamp || null;
+  saveState();
+  try {
+    const cur = JSON.parse(localStorage.getItem(LS_KEY));
+    cur.importedAt   = snap.importedAt;
+    cur.importedFrom = snap.importedFrom;
+    localStorage.setItem(LS_KEY, JSON.stringify(cur));
+    updateStatoBox(cur);
+  } catch(e2){}
+  renderBC(); initBS(); renderEvt(); renderTC();
+  document.getElementById('remote-banner').style.display = 'none';
+}
+
+
+loadState();
+renderBC();
+initBS();
+initEvtCat();
+renderEvt();
+renderTC();
+fetchRemoteState();
+</script>
+</body>
+</html>
