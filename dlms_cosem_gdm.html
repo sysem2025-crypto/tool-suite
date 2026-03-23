@@ -828,6 +828,7 @@ function updateStatoBox(snap){
 }
 
 
+function exportJSON(){
   const snap = {
     version: 1,
     timestamp: new Date().toISOString(),
@@ -883,6 +884,7 @@ function importJSON(input){
 }
 
 
+function clearAllData(){
   if(!confirm('Cancellare TUTTI i dati salvati e ricominciare da zero?')) return;
   localStorage.removeItem(LS_KEY);
   location.reload();
