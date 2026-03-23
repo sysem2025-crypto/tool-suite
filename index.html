@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tool Suite — Utility Tecniche</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* ── Pietro Fiorentini brand palette ── */
+  --pf-50:  #e6f7f4;
+  --pf-100: #b3e8df;
+  --pf-200: #7dd6ca;
+  --pf-300: #3dbfae;
+  --pf-400: #06967e;
+  --pf-500: #057d69;
+  --pf-600: #046454;
+  --pf-700: #034b3f;
+  --pf-800: #02322a;
+  --pf-900: #011915;
+  --bg:      #0e0f11;
+  --bg2:     #161719;
+  --bg3:     #1e2023;
+  --bg4:     #26282c;
+  --line:    rgba(255,255,255,0.07);
+  --line2:   rgba(255,255,255,0.13);
+  --text:    #e8e6e1;
+  --text2:   #8a8880;
+  --text3:   #555350;
+  --accent:  #3dbfae;
+  --accent2: #034b3f;
+  --green:   #3ecf74;
+  --amber:   #f5a623;
+  --red:     #e55353;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'IBM Plex Sans', system-ui, sans-serif;
+  --r:       6px;
+  --r-lg:    10px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* ── grid ── */
+.layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: 100vh;
+}
+
+/* ── sidebar ── */
+aside {
+  background: var(--bg2);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+.logo-area {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.logo-placeholder {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r);
+  background: var(--accent2);
+  border: 1px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.logo-placeholder svg { width: 20px; height: 20px; }
+.company-name {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: .02em;
+}
+.company-sub {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 2px;
+  font-family: var(--mono);
+}
+.nav-section {
+  padding: 20px 12px 8px;
+}
+.nav-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text3);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 0 8px;
+  margin-bottom: 6px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px;
+  border-radius: var(--r);
+  cursor: pointer;
+  color: var(--text2);
+  font-size: 13px;
+  text-decoration: none;
+  transition: background .15s, color .15s;
+  border: 1px solid transparent;
+}
+.nav-item:hover { background: var(--bg3); color: var(--text); }
+.nav-item.active { background: var(--bg4); color: var(--text); border-color: var(--line2); }
+.nav-item .ni-icon {
+  width: 16px; height: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.nav-item .ni-badge {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 20px;
+  background: var(--bg4);
+  color: var(--text3);
+}
+.nav-item.active .ni-badge { background: var(--accent2); color: var(--accent); }
+.sidebar-footer {
+  margin-top: auto;
+  padding: 16px 20px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  color: var(--text3);
+  font-family: var(--mono);
+}
+.sidebar-footer a { color: var(--text3); text-decoration: none; }
+.sidebar-footer a:hover { color: var(--text2); }
+
+/* ── main ── */
+main { padding: 40px 48px; max-width: 1100px; }
+
+/* ── topbar ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+.topbar h1 {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+}
+.topbar-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+
+/* ── stats strip ── */
+.stats-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 40px;
+}
+.stat-card {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+}
+.stat-card.c-blue::before  { background: var(--accent); }
+.stat-card.c-green::before { background: var(--green); }
+.stat-card.c-amber::before { background: var(--amber); }
+.stat-card.c-gray::before  { background: var(--text3); }
+.stat-label { font-size: 11px; color: var(--text3); font-family: var(--mono); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .06em; }
+.stat-val   { font-size: 26px; font-weight: 300; color: var(--text); font-family: var(--mono); }
+
+/* ── section ── */
+.section { margin-bottom: 48px; }
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.section-title {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text2);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.section-count {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 20px;
+  background: var(--bg3);
+  color: var(--text3);
+  border: 1px solid var(--line);
+}
+
+/* ── tool cards ── */
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+.tool-card {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 20px;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color .15s, background .15s;
+  position: relative;
+  overflow: hidden;
+}
+.tool-card:hover {
+  border-color: var(--line2);
+  background: var(--bg3);
+}
+.tool-card:hover .tc-arrow { opacity: 1; transform: translate(2px, -2px); }
+.tool-card.wip {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: default;
+}
+.tc-header { display: flex; align-items: flex-start; gap: 12px; }
+.tc-icon {
+  width: 38px; height: 38px;
+  border-radius: var(--r);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  border: 1px solid var(--line2);
+}
+.tc-icon.gas     { background: #0d2b1f; border-color: #1a5c3a; }
+.tc-icon.meter   { background: #0d1f2b; border-color: #1a3f5c; }
+.tc-icon.cert    { background: #2b1f0d; border-color: #5c3f1a; }
+.tc-icon.doc     { background: #1f0d2b; border-color: #3f1a5c; }
+.tc-icon.generic { background: var(--bg3); }
+.tc-meta { flex: 1; min-width: 0; }
+.tc-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tc-arrow {
+  font-size: 14px;
+  color: var(--text3);
+  opacity: 0;
+  transition: opacity .15s, transform .15s;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+.tc-desc {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.5;
+}
+.tc-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  border: 1px solid var(--line2);
+  color: var(--text3);
+  background: var(--bg3);
+}
+.tag.t-active { border-color: #1a5c3a; color: var(--green); background: #0d2b1f; }
+.tag.t-wip    { border-color: #5c3f1a; color: var(--amber); background: #2b1f0d; }
+.tag.t-norm   { border-color: var(--accent2); color: var(--accent); background: #0d1f2b; }
+.tc-updated {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+}
+
+/* ── add-tool card ── */
+.tool-card.add-card {
+  border-style: dashed;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  flex-direction: row;
+  gap: 8px;
+  pointer-events: none;
+  opacity: 0.35;
+}
+.add-card span { font-size: 12px; color: var(--text3); font-family: var(--mono); }
+
+/* ── search bar ── */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 10px 16px;
+  margin-bottom: 28px;
+}
+.search-bar input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+.search-bar input::placeholder { color: var(--text3); }
+.search-bar .sb-icon { color: var(--text3); font-size: 14px; }
+.search-bar kbd {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--bg4);
+  border: 1px solid var(--line2);
+  color: var(--text3);
+}
+
+/* ── anim ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.tool-card { animation: fadeUp .3s ease both; }
+.tool-card:nth-child(2) { animation-delay: .04s; }
+.tool-card:nth-child(3) { animation-delay: .08s; }
+.tool-card:nth-child(4) { animation-delay: .12s; }
+.tool-card:nth-child(5) { animation-delay: .16s; }
+
+/* ── responsive ── */
+@media(max-width: 768px) {
+  .layout { grid-template-columns: 1fr; }
+  aside { position: static; height: auto; flex-direction: row; flex-wrap: wrap; }
+  main  { padding: 24px 20px; }
+  .stats-strip { grid-template-columns: repeat(2,1fr); }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ── SIDEBAR ── -->
+<aside>
+  <div class="logo-area">
+    <img src="data:image/png;base64,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" alt="Pietro Fiorentini" style="width:auto;height:28px;display:block;margin-bottom:10px">
+    <div class="company-name">Pietro Fiorentini S.P.A.</div>
+    <div class="company-sub">Tool Suite — v1.0</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Navigazione</div>
+    <a href="#" class="nav-item active">
+      <span class="ni-icon">⊞</span>
+      <span>Tutti gli strumenti</span>
+      <span class="ni-badge" id="nav-tot">1</span>
+    </a>
+    <a href="#gas" class="nav-item">
+      <span class="ni-icon">◈</span>
+      <span>Gas / DLMS-COSEM</span>
+      <span class="ni-badge">1</span>
+    </a>
+    <a href="#presto" class="nav-item">
+      <span class="ni-icon">◌</span>
+      <span>In arrivo</span>
+      <span class="ni-badge" id="nav-wip">0</span>
+    </a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Risorse</div>
+    <a href="https://github.com" target="_blank" class="nav-item">
+      <span class="ni-icon">⎇</span>
+      <span>Repository</span>
+    </a>
+    <a href="palette.html" class="nav-item">
+      <span class="ni-icon">◐</span>
+      <span>Palette &amp; token</span>
+    </a>
+  </div>
+
+  <div class="sidebar-footer">
+    Uso interno — non distribuire
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<main>
+  <div class="topbar">
+    <h1>Tool Suite</h1>
+    <span class="topbar-meta" id="topbar-date"></span>
+  </div>
+
+  <div class="stats-strip">
+    <div class="stat-card c-blue">
+      <div class="stat-label">Strumenti attivi</div>
+      <div class="stat-val" id="st-attivi">1</div>
+    </div>
+    <div class="stat-card c-amber">
+      <div class="stat-label">In sviluppo</div>
+      <div class="stat-val" id="st-wip">0</div>
+    </div>
+    <div class="stat-card c-green">
+      <div class="stat-label">Standard coperti</div>
+      <div class="stat-val">1</div>
+    </div>
+    <div class="stat-card c-gray">
+      <div class="stat-label">Ultimo aggiornamento</div>
+      <div class="stat-val" style="font-size:15px" id="st-upd">—</div>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <span class="sb-icon">⌕</span>
+    <input type="text" id="search" placeholder="Cerca strumento…" oninput="filterTools()">
+    <kbd>⌘K</kbd>
+  </div>
+
+  <!-- ── SEZIONE GAS ── -->
+  <div class="section" id="gas">
+    <div class="section-header">
+      <span class="section-title">Gas / DLMS-COSEM</span>
+      <span class="section-count">1 strumento</span>
+    </div>
+    <div class="tools-grid" id="grid-gas">
+
+      <a href="dlms_cosem_gdm.html" class="tool-card" data-tags="dlms cosem gas gdm diagnostica bit eventi test case uni ts 11291">
+        <div class="tc-header">
+          <div class="tc-icon gas">◈</div>
+          <div class="tc-meta">
+            <div class="tc-title">DLMS/COSEM — Verifica GdM</div>
+          </div>
+          <span class="tc-arrow">↗</span>
+        </div>
+        <div class="tc-desc">Checklist interattiva per la verifica dei bit diagnostici, codici evento e test case. Conforme a UNI/TS 11291-14-2 Appendice D.</div>
+        <div class="tc-footer">
+          <span class="tag t-active">Attivo</span>
+          <span class="tag t-norm">UNI/TS 11291-14-2</span>
+          <span class="tag">B0–B31</span>
+          <span class="tag">190 eventi</span>
+          <span class="tc-updated">v1.0</span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- ── SEZIONE IN ARRIVO ── -->
+  <div class="section" id="presto">
+    <div class="section-header">
+      <span class="section-title">In arrivo</span>
+      <span class="section-count" id="wip-count">0 strumenti</span>
+    </div>
+    <div class="tools-grid" id="grid-wip">
+      <!-- aggiungere qui le card WIP quando disponibili -->
+      <!-- esempio:
+      <div class="tool-card wip">
+        <div class="tc-header">
+          <div class="tc-icon meter">◉</div>
+          <div class="tc-meta">
+            <div class="tc-title">Nuovo strumento</div>
+          </div>
+        </div>
+        <div class="tc-desc">Descrizione dello strumento in sviluppo.</div>
+        <div class="tc-footer">
+          <span class="tag t-wip">In sviluppo</span>
+        </div>
+      </div>
+      -->
+      <div class="tool-card add-card">
+        <span>+</span>
+        <span>Prossimo strumento</span>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<script>
+// data corrente
+document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+document.getElementById('st-upd').textContent = new Date().toLocaleDateString('it-IT',{month:'short',year:'numeric'});
+
+// contatori dinamici
+function updateCounts(){
+  const active = document.querySelectorAll('.tool-card:not(.wip):not(.add-card)').length;
+  const wip    = document.querySelectorAll('.tool-card.wip').length;
+  document.getElementById('st-attivi').textContent = active;
+  document.getElementById('st-wip').textContent    = wip;
+  document.getElementById('nav-tot').textContent   = active;
+  document.getElementById('nav-wip').textContent   = wip;
+  document.getElementById('wip-count').textContent = wip + ' strument' + (wip===1?'o':'i');
+}
+updateCounts();
+
+// ricerca
+function filterTools(){
+  const q = document.getElementById('search').value.toLowerCase().trim();
+  document.querySelectorAll('.tool-card:not(.add-card)').forEach(card => {
+    const text = (card.textContent + ' ' + (card.dataset.tags||'')).toLowerCase();
+    card.style.display = (!q || text.includes(q)) ? '' : 'none';
+  });
+}
+
+// shortcut ⌘K / Ctrl+K
+document.addEventListener('keydown', e => {
+  if((e.metaKey||e.ctrlKey) && e.key==='k'){
+    e.preventDefault();
+    document.getElementById('search').focus();
+  }
+});
+</script>
+</body>
+</html>

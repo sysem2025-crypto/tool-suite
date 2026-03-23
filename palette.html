@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Palette — Pietro Fiorentini Tool Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pf-50:  #e6f7f4;
+  --pf-100: #b3e8df;
+  --pf-200: #7dd6ca;
+  --pf-300: #3dbfae;
+  --pf-400: #06967e;
+  --pf-500: #057d69;
+  --pf-600: #046454;
+  --pf-700: #034b3f;
+  --pf-800: #02322a;
+  --pf-900: #011915;
+
+  --gray-50:  #f7f6f3;
+  --gray-100: #eeece8;
+  --gray-200: #d8d5cf;
+  --gray-300: #b8b4ac;
+  --gray-400: #8a8780;
+  --gray-500: #6b6862;
+  --gray-600: #4e4c47;
+  --gray-700: #343230;
+  --gray-800: #1e1d1b;
+  --gray-900: #0e0e0d;
+
+  --bg:   #ffffff;
+  --text: #1a1917;
+  --text2: #6b6965;
+  --text3: #a09d99;
+  --border: rgba(0,0,0,0.1);
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', system-ui, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--sans); color: var(--text); background: var(--bg); padding: 48px; line-height: 1.6; }
+h1 { font-family: var(--mono); font-size: 20px; font-weight: 500; margin-bottom: 6px; }
+.sub { font-family: var(--mono); font-size: 12px; color: var(--text3); margin-bottom: 48px; }
+.section { margin-bottom: 48px; }
+.section-title {
+  font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .1em; margin-bottom: 16px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+.swatches { display: flex; gap: 0; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 24px; }
+.swatch {
+  flex: 1; padding: 0;
+  display: flex; flex-direction: column;
+  cursor: pointer; transition: flex .2s;
+  position: relative;
+}
+.swatch:hover { flex: 2; }
+.swatch-color { height: 80px; }
+.swatch-info {
+  padding: 8px 10px;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+.swatch-name { font-family: var(--mono); font-size: 10px; font-weight: 500; color: var(--text); }
+.swatch-hex  { font-family: var(--mono); font-size: 10px; color: var(--text3); }
+.swatch-badge {
+  position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+  font-family: var(--mono); font-size: 9px; padding: 2px 6px; border-radius: 10px;
+  background: rgba(255,255,255,0.9); color: #1a1917; white-space: nowrap;
+  opacity: 0; transition: opacity .15s; pointer-events: none;
+}
+.swatch:hover .swatch-badge { opacity: 1; }
+.brand-marker {
+  position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%);
+  font-family: var(--mono); font-size: 9px; padding: 1px 5px; border-radius: 10px;
+  background: rgba(255,255,255,0.25); color: #fff; white-space: nowrap;
+}
+
+/* usage table */
+.usage-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap: 12px; }
+.usage-card {
+  border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+  font-size: 12px;
+}
+.usage-preview {
+  height: 48px; display: flex; align-items: center; padding: 0 14px;
+  gap: 10px; font-family: var(--mono); font-size: 12px;
+}
+.usage-body { padding: 10px 14px; }
+.usage-label { font-weight: 500; color: var(--text); margin-bottom: 2px; }
+.usage-desc  { color: var(--text3); font-size: 11px; }
+
+/* component examples */
+.comp-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+.btn { font-family: var(--mono); font-size: 12px; padding: 7px 16px; border-radius: 6px; cursor: pointer; border: none; }
+.btn-primary   { background: var(--pf-400); color: #fff; }
+.btn-secondary { background: var(--pf-50); color: var(--pf-600); border: 1px solid var(--pf-200); }
+.btn-outline   { background: transparent; color: var(--pf-400); border: 1px solid var(--pf-400); }
+.btn-dark      { background: var(--pf-700); color: var(--pf-100); }
+.tag { font-family: var(--mono); font-size: 10px; padding: 3px 9px; border-radius: 20px; }
+.tag-active { background: var(--pf-50); color: var(--pf-600); border: 1px solid var(--pf-200); }
+.tag-dark   { background: var(--pf-700); color: var(--pf-200); border: 1px solid var(--pf-600); }
+.tag-text   { background: var(--gray-100); color: var(--gray-600); border: 1px solid var(--gray-200); }
+.badge { font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 20px; }
+.badge-green { background: var(--pf-50); color: var(--pf-500); }
+.badge-dark  { background: var(--pf-800); color: var(--pf-300); }
+.input-ex { font-family: var(--mono); font-size: 12px; padding: 7px 12px; border-radius: 6px; border: 1px solid var(--gray-200); outline: none; color: var(--text); }
+.input-ex:focus { border-color: var(--pf-400); box-shadow: 0 0 0 3px var(--pf-50); }
+.card-ex {
+  border: 1px solid var(--border); border-radius: 10px; padding: 16px;
+  max-width: 300px;
+}
+.card-ex-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.card-icon { width: 36px; height: 36px; border-radius: 6px; background: var(--pf-50); border: 1px solid var(--pf-100); display: flex; align-items: center; justify-content: center; color: var(--pf-400); font-size: 16px; }
+.card-title { font-size: 13px; font-weight: 500; }
+.card-desc  { font-size: 12px; color: var(--text2); margin-bottom: 10px; }
+.card-footer { border-top: 1px solid var(--border); padding-top: 8px; display: flex; gap: 6px; }
+
+/* copy flash */
+.copied { position: fixed; bottom: 24px; right: 24px; background: var(--pf-700); color: var(--pf-100); font-family: var(--mono); font-size: 12px; padding: 8px 16px; border-radius: 6px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.copied.show { opacity: 1; }
+
+@media(max-width:600px){ body{ padding:24px 16px; } .swatches{ flex-wrap:wrap; } .swatch{ flex:unset; width:calc(50% - 1px); } }
+</style>
+</head>
+<body>
+
+<h1>Palette &amp; Design Tokens</h1>
+<p class="sub">Pietro Fiorentini Tool Suite — riferimento visivo per sviluppatori</p>
+
+<!-- ── BRAND GREEN ── -->
+<div class="section">
+  <div class="section-title">Brand green — Pietro Fiorentini</div>
+  <div class="swatches" id="pf-swatches"></div>
+</div>
+
+<!-- ── NEUTRALS ── -->
+<div class="section">
+  <div class="section-title">Neutrali</div>
+  <div class="swatches" id="gray-swatches"></div>
+</div>
+
+<!-- ── USAGE ── -->
+<div class="section">
+  <div class="section-title">Utilizzo consigliato</div>
+  <div class="usage-grid" id="usage-grid"></div>
+</div>
+
+<!-- ── COMPONENTS ── -->
+<div class="section">
+  <div class="section-title">Componenti</div>
+
+  <p style="font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:12px">Bottoni</p>
+  <div class="comp-row">
+    <button class="btn btn-primary">Primario</button>
+    <button class="btn btn-secondary">Secondario</button>
+    <button class="btn btn-outline">Outline</button>
+    <button class="btn btn-dark">Dark</button>
+  </div>
+
+  <p style="font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:12px">Tag &amp; badge</p>
+  <div class="comp-row">
+    <span class="tag tag-active">Attivo</span>
+    <span class="tag tag-dark">Archivio</span>
+    <span class="tag tag-text">UNI/TS 11291</span>
+    <span class="badge badge-green">v1.0</span>
+    <span class="badge badge-dark">B2</span>
+  </div>
+
+  <p style="font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:12px">Input</p>
+  <div class="comp-row">
+    <input class="input-ex" type="text" placeholder="Cerca strumento… (focus per verde)">
+  </div>
+
+  <p style="font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:12px">Tool card</p>
+  <div class="card-ex">
+    <div class="card-ex-header">
+      <div class="card-icon">◈</div>
+      <div class="card-title">DLMS/COSEM — Verifica GdM</div>
+    </div>
+    <div class="card-desc">Checklist interattiva per la verifica dei bit diagnostici e codici evento.</div>
+    <div class="card-footer">
+      <span class="tag tag-active">Attivo</span>
+      <span class="tag tag-text">UNI/TS 11291-14-2</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── CSS VARS ── -->
+<div class="section">
+  <div class="section-title">CSS variables — copia &amp; incolla</div>
+  <pre id="css-output" onclick="copyCss()" style="background:var(--gray-50);border:1px solid var(--border);border-radius:8px;padding:16px 20px;font-family:var(--mono);font-size:12px;color:var(--text);line-height:1.8;cursor:pointer;overflow-x:auto" title="Click per copiare"></pre>
+  <p style="font-size:11px;color:var(--text3);margin-top:6px;font-family:var(--mono)">↑ click per copiare</p>
+</div>
+
+<div class="copied" id="copied-msg">Copiato negli appunti!</div>
+
+<script>
+const PF = [
+  {stop:'50', hex:'#e6f7f4'},
+  {stop:'100',hex:'#b3e8df'},
+  {stop:'200',hex:'#7dd6ca'},
+  {stop:'300',hex:'#3dbfae'},
+  {stop:'400',hex:'#06967e', brand:true},
+  {stop:'500',hex:'#057d69'},
+  {stop:'600',hex:'#046454'},
+  {stop:'700',hex:'#034b3f'},
+  {stop:'800',hex:'#02322a'},
+  {stop:'900',hex:'#011915'},
+];
+const GRAY = [
+  {stop:'50', hex:'#f7f6f3'},
+  {stop:'100',hex:'#eeece8'},
+  {stop:'200',hex:'#d8d5cf'},
+  {stop:'300',hex:'#b8b4ac'},
+  {stop:'400',hex:'#8a8780'},
+  {stop:'500',hex:'#6b6862'},
+  {stop:'600',hex:'#4e4c47'},
+  {stop:'700',hex:'#343230'},
+  {stop:'800',hex:'#1e1d1b'},
+  {stop:'900',hex:'#0e0e0d'},
+];
+
+function isLight(hex){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return (r*299+g*587+b*114)/1000 > 140;
+}
+
+function buildSwatches(data, prefix, containerId){
+  const container = document.getElementById(containerId);
+  data.forEach(s=>{
+    const light = isLight(s.hex);
+    const div = document.createElement('div');
+    div.className = 'swatch';
+    div.onclick = ()=>{ navigator.clipboard.writeText(s.hex); flash(s.hex); };
+    div.innerHTML = `
+      <div class="swatch-color" style="background:${s.hex}">
+        ${s.brand?`<span class="brand-marker">brand</span>`:''}
+        <span class="swatch-badge">${s.hex}</span>
+      </div>
+      <div class="swatch-info">
+        <div class="swatch-name" style="color:${light?'#1a1917':'#e8e6e1'};background:${s.hex};margin:-8px -10px 4px;padding:3px 10px;font-size:9px">${prefix}-${s.stop}</div>
+        <div class="swatch-name">${prefix}-${s.stop}</div>
+        <div class="swatch-hex">${s.hex}</div>
+      </div>`;
+    container.appendChild(div);
+  });
+}
+
+const USAGE = [
+  {label:'Accento primario',      desc:'Link, bottoni principali, focus ring',    bg:'#06967e', fg:'#ffffff', token:'--pf-400'},
+  {label:'Accento chiaro',        desc:'Background badge, tag attivi, icon bg',   bg:'#e6f7f4', fg:'#046454', token:'--pf-50'},
+  {label:'Accento hover',         desc:'Hover su bottoni, stati attivi',          bg:'#057d69', fg:'#ffffff', token:'--pf-500'},
+  {label:'Sidebar dark',          desc:'Background sidebar tema scuro',           bg:'#034b3f', fg:'#b3e8df', token:'--pf-700'},
+  {label:'Testo su chiaro',       desc:'Testo badge, label su sfondi chiari',     bg:'#046454', fg:'#e6f7f4', token:'--pf-600'},
+  {label:'Surface chiara',        desc:'Card bg, panel bg tema chiaro',           bg:'#f7f6f3', fg:'#1a1917', token:'--gray-50'},
+  {label:'Border default',        desc:'Bordi card e separatori',                 bg:'#ffffff', fg:'#d8d5cf', token:'--gray-200', border:true},
+  {label:'Testo primario',        desc:'Titoli, label principali',                bg:'#ffffff', fg:'#1a1917', token:'--gray-900'},
+];
+
+function buildUsage(){
+  const grid = document.getElementById('usage-grid');
+  USAGE.forEach(u=>{
+    const div = document.createElement('div');
+    div.className = 'usage-card';
+    div.innerHTML = `
+      <div class="usage-preview" style="background:${u.bg};${u.border?`border-bottom:3px solid ${u.fg};`:''}">
+        <span style="font-family:var(--mono);font-size:11px;color:${u.fg}">${u.token}</span>
+        <span style="font-family:var(--mono);font-size:11px;color:${u.fg};opacity:.6;margin-left:auto">${u.bg}</span>
+      </div>
+      <div class="usage-body">
+        <div class="usage-label">${u.label}</div>
+        <div class="usage-desc">${u.desc}</div>
+      </div>`;
+    grid.appendChild(div);
+  });
+}
+
+function buildCssOutput(){
+  const lines = [
+    '/* Pietro Fiorentini — Brand palette */',
+    ':root {'
+  ];
+  PF.forEach(s=>lines.push(`  --pf-${s.stop}: ${s.hex};${s.brand?' /* brand */' :''}`));
+  lines.push('');
+  GRAY.forEach(s=>lines.push(`  --gray-${s.stop}: ${s.hex};`));
+  lines.push('}');
+  document.getElementById('css-output').textContent = lines.join('\n');
+}
+
+function copyCss(){
+  navigator.clipboard.writeText(document.getElementById('css-output').textContent);
+  flash('CSS');
+}
+function flash(label){
+  const el=document.getElementById('copied-msg');
+  el.textContent = label==='CSS' ? 'CSS copiato!' : `${label} copiato!`;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),1800);
+}
+
+buildSwatches(PF,'--pf','pf-swatches');
+buildSwatches(GRAY,'--gray','gray-swatches');
+buildUsage();
+buildCssOutput();
+</script>
+</body>
+</html>
