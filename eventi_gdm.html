@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Collaudo Eventi GdM — UNI/TS 11291-14-2</title>
+<style>
+:root {
+  --bg:#ffffff;--bg2:#f7f6f2;--bg3:#f0efe9;--bg4:#e8e6e0;
+  --border:rgba(0,0,0,0.10);--border2:rgba(0,0,0,0.20);
+  --text:#1a1a18;--text2:#5a5a56;--text3:#8a8a84;
+  --mono:'Courier New',monospace;--sans:system-ui,-apple-system,sans-serif;
+  --r:8px;--r-lg:12px;
+  --green:#3B6D11;--green-bg:#EAF3DE;
+  --red:#A32D2D;--red-bg:#FCEBEB;
+  --amber:#854F0B;--amber-bg:#FAEEDA;
+  --blue:#185FA5;--blue-bg:#E6F1FB;
+  --purple:#3C3489;--purple-bg:#EEEDFE;
+  --gray:#5F5E5A;--gray-bg:#F1EFE8;
+  --pf-400:#06967e;--pf-50:#e6f7f4;--pf-200:#7dd6ca;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#1c1c1a;--bg2:#252522;--bg3:#2e2e2a;--bg4:#383834;
+  --border:rgba(255,255,255,0.09);--border2:rgba(255,255,255,0.18);
+  --text:#f0ede8;--text2:#a0a09a;--text3:#686864;
+  --green:#9FE1CB;--green-bg:#085041;
+  --red:#F09595;--red-bg:#501313;
+  --amber:#FAC775;--amber-bg:#633806;
+  --blue:#85B7EB;--blue-bg:#042C53;
+  --purple:#AFA9EC;--purple-bg:#26215C;
+  --gray:#B4B2A9;--gray-bg:#444441;
+  --pf-400:#3dbfae;--pf-50:#034b3f;--pf-200:#057d69;
+}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);font-size:13px;color:var(--text);background:var(--bg);line-height:1.5}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+
+.app-header{border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--bg);position:sticky;top:0;z-index:100}
+.app-header h1{font-size:15px;font-weight:600;color:var(--text);flex:1;min-width:200px}
+.sub{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.stato-box{font-size:11px;color:var(--text2);background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:5px 10px;line-height:1.7;white-space:nowrap}
+.abtn{font-size:12px;padding:5px 13px;border-radius:var(--r);border:1px solid var(--border2);background:var(--bg);color:var(--text);cursor:pointer;font-family:var(--sans);white-space:nowrap}
+.abtn:hover{background:var(--bg2)}
+.abtn.danger{color:var(--red)}
+
+.main{display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 60px)}
+
+/* ── SIDEBAR ── */
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);padding:0;position:sticky;top:60px;height:calc(100vh - 60px);overflow-y:auto;display:flex;flex-direction:column}
+.sb-section{padding:14px 12px 6px}
+.sb-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:0 8px;margin-bottom:6px}
+.sb-stat{display:flex;justify-content:space-between;align-items:center;padding:4px 8px;font-size:12px;color:var(--text2)}
+.sb-stat span:last-child{font-family:var(--mono);font-size:11px}
+.prog-bar{height:3px;background:var(--bg3);border-radius:2px;margin:8px 12px 6px;overflow:hidden}
+.prog-fill{height:100%;background:var(--pf-400);border-radius:2px;transition:width .3s}
+.sb-filter{display:flex;flex-direction:column;gap:2px;padding:0 12px 8px}
+.sf{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--r);cursor:pointer;font-size:12px;color:var(--text2);border:1px solid transparent;background:none;text-align:left;width:100%;font-family:var(--sans)}
+.sf:hover{background:var(--bg3)}
+.sf.on{background:var(--bg4);color:var(--text);border-color:var(--border2);font-weight:500}
+.sf .cnt{margin-left:auto;font-family:var(--mono);font-size:10px;padding:1px 6px;border-radius:10px;background:var(--bg3);color:var(--text3)}
+.sf.on .cnt{background:var(--pf-50);color:var(--pf-400)}
+.sb-search{padding:8px 12px}
+.sb-search input{width:100%;font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--r);background:var(--bg);color:var(--text);font-family:var(--sans)}
+.sb-search input:focus{outline:none;border-color:var(--pf-400)}
+.sb-footer{margin-top:auto;padding:12px;border-top:1px solid var(--border)}
+
+/* ── CONTENT ── */
+.content{padding:20px;overflow-y:auto}
+.content-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.content-header h2{font-size:14px;font-weight:600;color:var(--text);flex:1}
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:16px}
+.stat{background:var(--bg2);border-radius:var(--r);padding:9px 12px}
+.sl{font-size:10px;color:var(--text3);margin-bottom:2px;text-transform:uppercase;letter-spacing:.04em}
+.sv{font-size:18px;font-weight:600;color:var(--text)}
+.act-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+
+/* ── TC CARDS ── */
+.tc-list{display:flex;flex-direction:column;gap:6px}
+.tc-card{border:1px solid var(--border);border-radius:var(--r-lg);background:var(--bg);overflow:hidden}
+.tc-card.hidden{display:none}
+.tc-head{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;user-select:none}
+.tc-head:hover{background:var(--bg2)}
+.tc-code{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text3);min-width:52px}
+.tc-desc{flex:1;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tc-flags{display:flex;gap:4px;flex-shrink:0}
+.flag{font-family:var(--mono);font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600}
+.flag-r{background:var(--green-bg);color:var(--green)}
+.flag-lm{background:var(--pf-50);color:var(--pf-400)}
+.flag-os{background:var(--purple-bg);color:var(--purple)}
+.flag-b2{background:var(--blue-bg);color:var(--blue)}
+.flag-d2{background:var(--amber-bg);color:var(--amber)}
+.tc-badge{font-size:11px;padding:2px 8px;border-radius:var(--r);font-weight:600;white-space:nowrap;flex-shrink:0}
+.b-todo{background:var(--bg2);color:var(--text3);border:1px solid var(--border)}
+.b-pass{background:var(--green-bg);color:var(--green)}
+.b-partial{background:var(--amber-bg);color:var(--amber)}
+.b-fail{background:var(--red-bg);color:var(--red)}
+.cprog{width:50px;height:2px;background:var(--bg3);border-radius:2px;flex-shrink:0}
+.cpf{height:100%;background:var(--pf-400);border-radius:2px}
+.chev{font-size:11px;color:var(--text3);transition:transform .2s;flex-shrink:0}
+.chev.open{transform:rotate(90deg)}
+
+.tc-body{display:none;border-top:1px solid var(--border);padding:14px}
+.tc-body.open{display:block}
+.meta-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:14px;font-size:12px}
+.meta-item{background:var(--bg2);border-radius:var(--r);padding:8px 10px}
+.mi-label{font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em}
+.mi-val{color:var(--text);font-family:var(--mono);font-size:11px}
+.sub-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin:12px 0 6px}
+.tbl-wrap{overflow-x:auto;margin-bottom:12px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;font-size:10px;font-weight:600;color:var(--text3);padding:5px 7px;border-bottom:1px solid var(--border)}
+td{padding:6px 7px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+.step-n{font-family:var(--mono);font-size:11px;color:var(--text3);width:28px}
+.step-exp b{color:var(--text);font-family:var(--mono)}
+.step-sel{font-size:11px;padding:2px 5px;border-radius:4px;border:1px solid var(--border2);background:var(--bg);color:var(--text);cursor:pointer;width:64px}
+.crit-list{list-style:none;margin-bottom:12px}
+.crit-list li{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px}
+.crit-list li:last-child{border-bottom:none}
+.crit-cb{width:14px;height:14px;cursor:pointer;flex-shrink:0;margin-top:1px;accent-color:var(--pf-400)}
+.crit-txt{flex:1;line-height:1.4;color:var(--text)}
+.crit-txt.done{color:var(--text3);text-decoration:line-through}
+textarea{font-size:12px;padding:6px 8px;border-radius:var(--r);border:1px solid var(--border2);background:var(--bg);color:var(--text);resize:vertical;font-family:var(--sans);width:100%;min-height:44px}
+textarea:focus{outline:none;border-color:var(--pf-400)}
+.d2-box{background:var(--amber-bg);border:1px solid rgba(133,79,11,0.2);border-radius:var(--r);padding:8px 12px;font-size:12px;color:var(--amber);margin-bottom:12px;line-height:1.5}
+.pill{font-size:10px;padding:1px 6px;border-radius:var(--r);white-space:nowrap;display:inline-block}
+.pill-cat{background:var(--bg3);color:var(--text2)}
+
+/* ── LOADING ── */
+.loading{text-align:center;padding:60px 20px;color:var(--text3);font-size:13px}
+.loading .spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--pf-400);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-box{background:var(--red-bg);border:1px solid var(--red);border-radius:var(--r);padding:16px;color:var(--red);font-size:13px;margin:20px}
+
+/* ── REMOTE BANNER ── */
+#remote-banner{display:none;position:fixed;bottom:20px;right:20px;z-index:999;
+  background:var(--bg);border:1px solid var(--border2);border-radius:var(--r-lg);
+  padding:14px 16px;max-width:360px;box-shadow:0 4px 20px rgba(0,0,0,0.15);font-size:13px}
+#remote-banner h4{font-weight:600;color:var(--text);margin-bottom:4px;font-size:13px}
+#remote-banner p{color:var(--text2);font-size:12px;margin-bottom:10px;line-height:1.4}
+#remote-banner .btns{display:flex;gap:8px}
+
+@media(max-width:700px){
+  .main{grid-template-columns:1fr}
+  .sidebar{position:static;height:auto}
+  .stats-row{grid-template-columns:repeat(3,1fr)}
+}
+@media print{
+  .app-header .abtn,.sidebar,.act-bar{display:none}
+  .main{grid-template-columns:1fr}
+  .tc-body{display:block!important}
+}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:200px">
+    <h1>Collaudo eventi GdM</h1>
+    <span class="sub">UNI/TS 11291-14-2 · Appendice D · Prospetto D.1</span>
+  </div>
+  <div class="stato-box">
+    <div><span style="color:var(--text3)">Salvataggio locale:</span> <span id="ind-local">—</span></div>
+    <div><span style="color:var(--text3)">JSON importato:</span> <span id="ind-json">—</span></div>
+    <div><span style="color:var(--text3)">Stato remoto:</span> <span id="ind-remote">verifica…</span></div>
+  </div>
+  <button class="abtn" onclick="exportJSON()">Esporta JSON</button>
+  <button class="abtn" onclick="document.getElementById('imp-file').click()">Importa JSON</button>
+  <input type="file" id="imp-file" accept=".json" style="display:none" onchange="importJSON(this)">
+  <button class="abtn" onclick="window.print()">Stampa</button>
+  <button class="abtn danger" onclick="clearAll()">Reset</button>
+</div>
+
+<div class="main">
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <div class="sb-section">
+      <div class="sb-label">Avanzamento</div>
+      <div class="sb-stat"><span>Totale eventi</span><span id="sb-tot">—</span></div>
+      <div class="sb-stat"><span style="color:var(--green)">Passati</span><span id="sb-pass" style="color:var(--green)">0</span></div>
+      <div class="sb-stat"><span style="color:var(--amber)">Parziali</span><span id="sb-par" style="color:var(--amber)">0</span></div>
+      <div class="sb-stat"><span style="color:var(--red)">Falliti</span><span id="sb-fail" style="color:var(--red)">0</span></div>
+      <div class="sb-stat"><span>Da eseguire</span><span id="sb-todo">—</span></div>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+
+    <div class="sb-section">
+      <div class="sb-label">Filtro stato</div>
+    </div>
+    <div class="sb-filter">
+      <button class="sf on" data-f="all" onclick="setFilter(this)"><span>Tutti</span><span class="cnt" id="cnt-all">—</span></button>
+      <button class="sf" data-f="todo" onclick="setFilter(this)"><span>Da eseguire</span><span class="cnt" id="cnt-todo">—</span></button>
+      <button class="sf" data-f="pass" onclick="setFilter(this)"><span>Passati</span><span class="cnt" id="cnt-pass">0</span></button>
+      <button class="sf" data-f="partial" onclick="setFilter(this)"><span>Parziali</span><span class="cnt" id="cnt-partial">0</span></button>
+      <button class="sf" data-f="reserved" onclick="setFilter(this)"><span>Riservati</span><span class="cnt" id="cnt-res">—</span></button>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-label">Filtro flag</div>
+    </div>
+    <div class="sb-filter">
+      <button class="sf" data-f="flag-R" onclick="setFilter(this)"><span>● Registrato</span></button>
+      <button class="sf" data-f="flag-LM" onclick="setFilter(this)"><span>LM Logbook metrologico</span></button>
+      <button class="sf" data-f="flag-OS" onclick="setFilter(this)"><span>OS Oggetti supervisionati</span></button>
+      <button class="sf" data-f="flag-B2" onclick="setFilter(this)"><span>B2 Solo classe B2</span></button>
+      <button class="sf" data-f="flag-D2" onclick="setFilter(this)"><span>D.2 Prescrizione speciale</span></button>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-label">Cerca</div>
+    </div>
+    <div class="sb-search">
+      <input type="text" id="srch" placeholder="Codice, descrizione, categoria…" oninput="render()">
+    </div>
+
+    <div class="sb-footer" style="font-size:11px;color:var(--text3)">
+      <a href="dlms_cosem_gdm.html" style="color:var(--text3)">← Bit diagnostici</a><br>
+      <a href="index.html" style="color:var(--text3);margin-top:4px;display:block">⌂ Dashboard</a>
+    </div>
+  </aside>
+
+  <!-- ── CONTENT ── -->
+  <div class="content">
+    <div id="loading-state" class="loading">
+      <div class="spinner"></div>
+      Caricamento dati da eventi_data.json…
+    </div>
+    <div id="main-content" style="display:none">
+      <div class="content-header">
+        <h2 id="content-title">Test case eventi</h2>
+        <button class="abtn" onclick="expandAll(true)">Espandi tutti</button>
+        <button class="abtn" onclick="expandAll(false)">Comprimi tutti</button>
+      </div>
+      <div class="stats-row">
+        <div class="stat"><div class="sl">Verificati</div><div class="sv" id="s-done">0</div></div>
+        <div class="stat"><div class="sl" style="color:var(--green)">OK</div><div class="sv" style="color:var(--green)" id="s-ok">0</div></div>
+        <div class="stat"><div class="sl" style="color:var(--amber)">Parziali</div><div class="sv" style="color:var(--amber)" id="s-par">0</div></div>
+        <div class="stat"><div class="sl" style="color:var(--red)">Falliti</div><div class="sv" style="color:var(--red)" id="s-fail">0</div></div>
+        <div class="stat"><div class="sl">Da eseguire</div><div class="sv" id="s-todo">0</div></div>
+      </div>
+      <div class="tc-list" id="tc-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- remote banner -->
+<div id="remote-banner">
+  <h4 id="rb-title">Stato remoto disponibile</h4>
+  <p id="rb-desc"></p>
+  <div class="btns">
+    <button class="abtn" style="flex:1;background:var(--blue-bg);color:var(--blue);border-color:var(--blue)" onclick="applyRemote()">Carica</button>
+    <button class="abtn" onclick="document.getElementById('remote-banner').style.display='none'">Ignora</button>
+  </div>
+</div>
+
+<script>
+const LS_KEY = 'eventi_gdm_v1';
+const DATA_URL = './eventi_data.json';
+const REMOTE_STATE_URL = './stato_eventi.json';
+
+let ALL_TC = [];
+let state = {};
+let curFilter = 'all';
+let remoteSnap = null;
+
+// ── LOAD DATA ──
+async function init() {
+  try {
+    const res = await fetch(DATA_URL + '?_=' + Date.now(), {cache:'no-store'});
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    ALL_TC = data.testCases;
+    ALL_TC.forEach(tc => {
+      if (!state[tc.id]) state[tc.id] = {criteria: tc.criteria.map(()=>false), steps:{}, note:''};
+    });
+    loadState();
+    document.getElementById('loading-state').style.display = 'none';
+    document.getElementById('main-content').style.display = 'block';
+    updateCounts();
+    render();
+    fetchRemoteState();
+  } catch(e) {
+    document.getElementById('loading-state').innerHTML =
+      `<div class="error-box">
+        <strong>Impossibile caricare eventi_data.json</strong><br>
+        Assicurarsi che il file sia nella stessa cartella di questo HTML.<br>
+        <small style="opacity:.7">${e.message}</small>
+      </div>`;
+  }
+}
+
+// ── RENDER ──
+function tcStatus(tc) {
+  const s = state[tc.id];
+  if (!s) return 'todo';
+  const n = s.criteria.filter(Boolean).length;
+  if (n === 0) return 'todo';
+  if (n === tc.criteria.length) return 'pass';
+  return 'partial';
+}
+
+function render() {
+  const q = document.getElementById('srch').value.toLowerCase().trim();
+  const list = document.getElementById('tc-list');
+  list.innerHTML = '';
+  let shown = 0;
+
+  ALL_TC.forEach(tc => {
+    const st = tcStatus(tc);
+    const isRes = tc.reserved;
+
+    // filter
+    if (curFilter === 'all' && isRes) return;
+    if (curFilter === 'reserved' && !isRes) return;
+    if (curFilter === 'todo' && st !== 'todo') return;
+    if (curFilter === 'pass' && st !== 'pass') return;
+    if (curFilter === 'partial' && st !== 'partial') return;
+    if (curFilter === 'flag-R' && !tc.flags.R) return;
+    if (curFilter === 'flag-LM' && !tc.flags.LM) return;
+    if (curFilter === 'flag-OS' && !tc.flags.OS) return;
+    if (curFilter === 'flag-B2' && !tc.flags.B2) return;
+    if (curFilter === 'flag-D2' && !tc.d2note) return;
+    if (q) {
+      const hay = `${tc.id} ${tc.code} ${tc.desc} ${tc.catLabel} ${tc.cat}`.toLowerCase();
+      if (!hay.includes(q)) return;
+    }
+
+    list.appendChild(buildCard(tc));
+    shown++;
+  });
+
+  document.getElementById('content-title').textContent =
+    shown === ALL_TC.length ? `Test case eventi (${shown})` : `Test case eventi — ${shown} mostrati`;
+  updateStats();
+}
+
+function buildCard(tc) {
+  const s = state[tc.id] || {criteria:tc.criteria.map(()=>false),steps:{},note:''};
+  const st = tcStatus(tc);
+  const pct = tc.criteria.length > 0 ? Math.round(s.criteria.filter(Boolean).length / tc.criteria.length * 100) : 0;
+  const isOpen = s.open || false;
+
+  const flagsHTML = [
+    tc.flags.R  ? '<span class="flag flag-r">R</span>' : '',
+    tc.flags.LM ? '<span class="flag flag-lm">LM</span>' : '',
+    tc.flags.OS ? '<span class="flag flag-os">OS</span>' : '',
+    tc.flags.B2 ? '<span class="flag flag-b2">B2</span>' : '',
+    tc.d2note   ? '<span class="flag flag-d2">D.2</span>' : '',
+  ].join('');
+
+  const badgeMap = {pass:'b-pass',partial:'b-partial',fail:'b-fail',todo:'b-todo'};
+  const badgeLabel = {pass:'Passato',partial:'Parziale',fail:'Fallito',todo:'Da eseguire'};
+
+  let stepRows = '';
+  (tc.steps||[]).forEach(step => {
+    if (step.sub) {
+      stepRows += `<tr><td colspan="4" style="background:var(--bg2);font-size:11px;font-weight:600;color:var(--text2);padding:5px 7px">${step.sub}</td></tr>`;
+      return;
+    }
+    const sv = s.steps[step.n] || '';
+    const expH = (step.e||'').replace(/Evento (\d+)/g,'Evento <b>$1</b>').replace(/Bit (B\d+)/g,'<b>$1</b>');
+    stepRows += `<tr>
+      <td class="step-n">${step.n}</td>
+      <td style="font-size:12px">${step.a}</td>
+      <td class="step-exp" style="font-size:12px;color:var(--text2)">${expH}</td>
+      <td><select class="step-sel" onchange="setStep('${tc.id}',${step.n},this.value)">
+        <option value="">—</option>
+        <option value="ok" ${sv==='ok'?'selected':''}>✓</option>
+        <option value="ko" ${sv==='ko'?'selected':''}>✗</option>
+        <option value="na" ${sv==='na'?'selected':''}>N/A</option>
+      </select></td>
+    </tr>`;
+  });
+
+  const critRows = (tc.criteria||[]).map((c,i) => `
+    <li>
+      <input type="checkbox" class="crit-cb" ${s.criteria[i]?'checked':''} onchange="setCrit('${tc.id}',${i},this.checked)">
+      <span class="crit-txt ${s.criteria[i]?'done':''}">${c}</span>
+    </li>`).join('');
+
+  const d2box = tc.d2note ? `<div class="d2-box"><strong>Prescrizione D.2:</strong> ${tc.d2note}</div>` : '';
+
+  const bitsHTML = tc.bitsAffected && tc.bitsAffected.length ?
+    tc.bitsAffected.map(b=>`<span class="pill" style="background:var(--bg3);color:var(--text2)">${b}</span>`).join(' ') : '—';
+
+  const card = document.createElement('div');
+  card.className = 'tc-card';
+  card.id = 'card-' + tc.id;
+  if (tc.reserved) card.style.opacity = '0.45';
+
+  card.innerHTML = `
+    <div class="tc-head" onclick="toggleCard('${tc.id}')">
+      <span class="tc-code">EV-${String(tc.code).padStart(3,'0')}</span>
+      <span class="tc-desc" title="${tc.desc}">${tc.desc}</span>
+      <div class="tc-flags">${flagsHTML}</div>
+      <span class="tc-badge ${badgeMap[st]||'b-todo'}" id="badge-${tc.id}">${badgeLabel[st]}</span>
+      <div class="cprog"><div class="cpf" id="cpf-${tc.id}" style="width:${pct}%"></div></div>
+      <span class="chev ${isOpen?'open':''}" id="chev-${tc.id}">&#9654;</span>
+    </div>
+    <div class="tc-body ${isOpen?'open':''}" id="body-${tc.id}">
+      ${d2box}
+      <div class="meta-grid">
+        <div class="meta-item"><div class="mi-label">Codice evento</div><div class="mi-val">${tc.code}</div></div>
+        <div class="meta-item"><div class="mi-label">Categoria</div><div class="mi-val">${tc.catLabel}</div></div>
+        <div class="meta-item"><div class="mi-label">Flag normativi</div><div class="mi-val">${[tc.flags.R?'Registrato':'',tc.flags.LM?'Logbook metr.':'',tc.flags.OS?'Oggetti sup.':'',tc.flags.B2?'Solo B2':''].filter(Boolean).join(', ')||'—'}</div></div>
+        <div class="meta-item"><div class="mi-label">Bit diagnostici associati</div><div class="mi-val">${tc.bitsAffected&&tc.bitsAffected.length?tc.bitsAffected.join(', '):'—'}</div></div>
+        <div class="meta-item"><div class="mi-label">Evento accoppiato</div><div class="mi-val">${tc.pairedWith ? `EV-${String(tc.pairedWith).padStart(3,'0')}` : '—'}</div></div>
+      </div>
+      <div class="sub-label">Procedura di test</div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th style="width:28px">#</th><th>Azione</th><th>Risultato atteso</th><th style="width:64px">Esito</th></tr></thead>
+        <tbody>${stepRows}</tbody>
+      </table></div>
+      <div class="sub-label">Criteri di accettazione</div>
+      <ul class="crit-list">${critRows}</ul>
+      <div class="sub-label">Note</div>
+      <textarea placeholder="Annotazioni, anomalie, osservazioni…" oninput="setNote('${tc.id}',this.value)">${s.note||''}</textarea>
+    </div>`;
+  return card;
+}
+
+function toggleCard(id) {
+  if (!state[id]) return;
+  state[id].open = !state[id].open;
+  document.getElementById('body-'+id)?.classList.toggle('open', state[id].open);
+  const chev = document.getElementById('chev-'+id);
+  if (chev) chev.classList.toggle('open', state[id].open);
+}
+
+function expandAll(open) {
+  ALL_TC.forEach(tc => { if (state[tc.id]) state[tc.id].open = open; });
+  render();
+}
+
+// ── STATE UPDATES ──
+function setCrit(id, i, v) {
+  if (!state[id]) return;
+  state[id].criteria[i] = v;
+  const card = document.getElementById('card-'+id);
+  if (card) {
+    const spans = card.querySelectorAll('.crit-txt');
+    if (spans[i]) spans[i].classList.toggle('done', v);
+    const tc = ALL_TC.find(t=>t.id===id);
+    const st = tcStatus(tc);
+    const badge = document.getElementById('badge-'+id);
+    const cpf = document.getElementById('cpf-'+id);
+    const badgeMap = {pass:'b-pass',partial:'b-partial',fail:'b-fail',todo:'b-todo'};
+    const badgeLabel = {pass:'Passato',partial:'Parziale',fail:'Fallito',todo:'Da eseguire'};
+    if (badge) { badge.className='tc-badge '+(badgeMap[st]||'b-todo'); badge.textContent=badgeLabel[st]; }
+    if (cpf && tc) cpf.style.width = Math.round(state[id].criteria.filter(Boolean).length/tc.criteria.length*100)+'%';
+  }
+  saveState();
+  updateStats();
+  updateCounts();
+}
+
+function setStep(id, n, v) { if (state[id]) { state[id].steps[n]=v; saveState(); } }
+function setNote(id, v) { if (state[id]) { state[id].note=v; schedSave(); } }
+
+let _saveT;
+function schedSave() { clearTimeout(_saveT); _saveT=setTimeout(saveState,600); }
+
+// ── STATS ──
+function updateStats() {
+  const visible = ALL_TC.filter(tc => !tc.reserved);
+  let done=0, ok=0, par=0, fail=0, todo=0;
+  visible.forEach(tc => {
+    const st = tcStatus(tc);
+    if (st==='pass'){done++;ok++;}
+    else if (st==='partial'){done++;par++;}
+    else if (st==='fail'){done++;fail++;}
+    else todo++;
+  });
+  document.getElementById('s-done').textContent = done;
+  document.getElementById('s-ok').textContent = ok;
+  document.getElementById('s-par').textContent = par;
+  document.getElementById('s-fail').textContent = fail;
+  document.getElementById('s-todo').textContent = todo;
+}
+
+function updateCounts() {
+  const all = ALL_TC.filter(tc=>!tc.reserved);
+  const res = ALL_TC.filter(tc=>tc.reserved);
+  let pass=0,partial=0,todo=0;
+  all.forEach(tc=>{const s=tcStatus(tc);if(s==='pass')pass++;else if(s==='partial')partial++;else todo++;});
+  document.getElementById('sb-tot').textContent = all.length;
+  document.getElementById('sb-pass').textContent = pass;
+  document.getElementById('sb-par').textContent = partial;
+  document.getElementById('sb-fail').textContent = 0;
+  document.getElementById('sb-todo').textContent = todo;
+  document.getElementById('cnt-all').textContent = all.length;
+  document.getElementById('cnt-todo').textContent = todo;
+  document.getElementById('cnt-pass').textContent = pass;
+  document.getElementById('cnt-partial').textContent = partial;
+  document.getElementById('cnt-res').textContent = res.length;
+  const pct = all.length>0 ? Math.round((pass+partial)/all.length*100) : 0;
+  document.getElementById('prog').style.width = pct+'%';
+}
+
+function setFilter(btn) {
+  document.querySelectorAll('.sf').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  curFilter = btn.dataset.f;
+  render();
+}
+
+// ── PERSISTENCE ──
+const LS_STATO = 'eventi_stato_v1';
+
+function saveState() {
+  try {
+    const now = new Date().toISOString();
+    const prevImport = (()=>{ try{ const p=JSON.parse(localStorage.getItem(LS_STATO)); return p?.importedAt||null; }catch(e){return null;} })();
+    const snap = { version:1, savedAt:now, importedAt:prevImport, tc:state };
+    localStorage.setItem(LS_STATO, JSON.stringify(snap));
+    updateStatoBox(snap);
+    const el=document.getElementById('ind-local');
+    if(el) { el.textContent='Salvato '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}); }
+  } catch(e){}
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(LS_STATO);
+    if (!raw) return;
+    const snap = JSON.parse(raw);
+    if (snap.tc) Object.entries(snap.tc).forEach(([k,v])=>{ if(state[k]) state[k]={...state[k],...v}; });
+    updateStatoBox(snap);
+  } catch(e){}
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  try { return new Date(iso).toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
+  catch(e){ return iso; }
+}
+
+function updateStatoBox(snap) {
+  const el_local = document.getElementById('ind-local');
+  const el_json  = document.getElementById('ind-json');
+  if (el_local) el_local.textContent = fmtDate(snap.savedAt);
+  if (el_json) {
+    if (snap.importedAt) {
+      const stale = snap.savedAt && snap.importedAt && new Date(snap.importedAt)<new Date(snap.savedAt) && (new Date(snap.savedAt)-new Date(snap.importedAt))>60000;
+      el_json.textContent = fmtDate(snap.importedAt);
+      el_json.style.color = stale ? 'var(--amber)' : 'var(--green)';
+    } else {
+      el_json.textContent = '—';
+    }
+  }
+}
+
+// ── EXPORT / IMPORT ──
+function exportJSON() {
+  const snap = {
+    version:1, savedAt:new Date().toISOString(),
+    label:'Collaudo eventi GdM — UNI/TS 11291-14-2',
+    tc: state
+  };
+  const blob = new Blob([JSON.stringify(snap,null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url;
+  a.download='stato_eventi_'+new Date().toISOString().slice(0,16).replace('T','_').replace(':','')+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importJSON(input) {
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const snap = JSON.parse(e.target.result);
+      if (!snap.tc) { alert('File non valido.'); return; }
+      if (!confirm('Sovrascrivere lo stato corrente?')) { input.value=''; return; }
+      Object.entries(snap.tc).forEach(([k,v])=>{ if(state[k]) state[k]={...state[k],...v}; });
+      snap.importedAt = new Date().toISOString();
+      try {
+        const cur = JSON.parse(localStorage.getItem(LS_STATO)) || {};
+        cur.importedAt = snap.importedAt;
+        localStorage.setItem(LS_STATO, JSON.stringify(cur));
+        updateStatoBox(cur);
+      } catch(e2){}
+      saveState(); render(); updateCounts();
+      alert('Importazione completata.');
+    } catch(err) { alert('Errore: '+err.message); }
+    input.value='';
+  };
+  reader.readAsText(file);
+}
+
+function clearAll() {
+  if (!confirm('Cancellare tutti i dati e ricominciare da zero?')) return;
+  localStorage.removeItem(LS_STATO);
+  ALL_TC.forEach(tc => { state[tc.id]={criteria:tc.criteria.map(()=>false),steps:{},note:'',open:false}; });
+  render(); updateCounts();
+}
+
+// ── REMOTE STATE ──
+async function fetchRemoteState() {
+  const el = document.getElementById('ind-remote');
+  try {
+    const res = await fetch(REMOTE_STATE_URL+'?_='+Date.now(),{cache:'no-store'});
+    if (!res.ok) throw new Error('not found');
+    const snap = await res.json();
+    if (!snap.tc) throw new Error('formato non valido');
+    remoteSnap = snap;
+    const remoteDate = snap.savedAt || null;
+    el.textContent = remoteDate ? fmtDate(remoteDate) : 'disponibile';
+    el.style.color = 'var(--green)';
+    let localDate = null;
+    try { localDate = JSON.parse(localStorage.getItem(LS_STATO))?.savedAt||null; } catch(e){}
+    if (remoteDate !== localDate) {
+      const newer = remoteDate && (!localDate || new Date(remoteDate)>new Date(localDate));
+      document.getElementById('rb-title').textContent = newer ? 'Stato remoto più recente' : 'Stato remoto disponibile';
+      document.getElementById('rb-desc').textContent = `File stato_eventi.json del ${fmtDate(remoteDate)}. ${newer?'Il tuo locale è più vecchio.':'Il tuo locale è più recente.'}`;
+      document.getElementById('remote-banner').style.display='block';
+      el.style.color = newer ? 'var(--green)' : 'var(--amber)';
+    }
+  } catch(e) {
+    el.textContent='non trovato'; el.style.color='var(--text3)';
+  }
+}
+
+function applyRemote() {
+  if (!remoteSnap?.tc) return;
+  if (!confirm('Sovrascrivere lo stato locale con quello remoto?')) return;
+  Object.entries(remoteSnap.tc).forEach(([k,v])=>{ if(state[k]) state[k]={...state[k],...v}; });
+  remoteSnap.importedAt = new Date().toISOString();
+  saveState(); render(); updateCounts();
+  document.getElementById('remote-banner').style.display='none';
+}
+
+// ── BOOT ──
+init();
+</script>
+</body>
+</html>
